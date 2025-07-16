@@ -153,11 +153,10 @@ The functional architecture of a SCHC Instance is depicted in the following figu
 |  |   +-------------------+    +-------------------+    |    |
 |  |   |      Profile      |    |     Context       |    |    |
 |  |   |                   |    |                   |    |    |
-|  |   | - inbound/        |    | - Set of Rules    |    |    |
-|  |   |   outbound        |    |   (SoR)           |    |    |
-|  |   |   interfaces      |    | - parser          |    |    |
-|  |   | - matching        |    |   identification  |    |    |
-|  |   |   policy          |    |                   |    |    |
+|  |   | - Dispatch Engine |    | - Set of Rules    |    |    |
+|  |   |   configuration   |    |   (SoR)           |    |    |
+|  |   | - matching        |    | - parser          |    |    |
+|  |   |   policy          |    |   identification  |    |    |
 |  |   | - device-specific |    |                   |    |    |
 |  |   |   configuration   |    |                   |    |    |
 |  |   +-------------------+    +-------------------+    |    |
@@ -300,10 +299,25 @@ In this case, the Dispatch Engine is a separate component that
   to determine how to route packets.
 
 ~~~~~~~
-                            Endpoint
-+---------------------------------------------------------------------+
-|   App. A    |    App. B   |    App. C   |    App. D   |    App. E   |
-+---------------------------------------------------------------------+
+                         Endpoint
++--------------------------------------------------------+
+|   App. A     |    App. C   |    App. D   |    App. E   |
++--------------+-------------+-------------+-------------+
+|     QUIC     |     CoAP    |    MQTT     |     HTTP    |
++--------------|-------------|-------------+-------------|
+|                 Dispatch                 |             |
+|                  Hook 1                  |             |
+|               (dport 5768)               |             |
+|                                          |             |
+|                    UDP                   |     TCP     |
++------------------------------------------+-------------+
+|                   IPv6                   |     IPv4    |
++------------------------------------------+-------------+
+|                   MPLS                   |             |
++------------------------------------------+             |
+|                         Ethernet                       |
++--------------------------------------------------------+
+
 ~~~~~~~
 
 
@@ -377,44 +391,6 @@ The authors would like to thank the SCHC Working Group for their
 contributions and feedback on this document.
 
 --- back
-
-# Examples
-
-## Example 1: Basic Point-to-Point Deployment
-
-This example shows a minimal SCHC deployment between two entities:
-
-~~~~~~~~
-  Device A                    Device B
-  +----------+              +----------+
-  |  SCHC    |<------------>|  SCHC    |
-  |  Entity  |              |  Entity  |
-  +----------+              +----------+
-       |                         |
-       v                         v
-  [Context]                 [Context]
-  [Profile]                 [Profile]
-~~~~~~~~
-
-## Example 2: Hub-and-Spoke Deployment
-
-This example shows a deployment with multiple devices connecting to a central hub:
-
-~~~~~~~~
-  Device A     Device B     Device C
-  +------+     +------+     +------+
-  | SCHC |     | SCHC |     | SCHC |
-  +------+     +------+     +------+
-      |            |            |
-      +------------+------------+
-                   |
-              +----------+
-              |   SCHC   |
-              |   Hub    |
-              +----------+
-                   |
-            [Context Repository]
-~~~~~~~~
 
 # Change Log
 
