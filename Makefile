@@ -34,8 +34,8 @@ $(XML_FILE): $(MARKDOWN_FILE)
 	kdrfc --xml $(MARKDOWN_FILE)
 
 $(PDF_FILE): $(MARKDOWN_FILE)
-	@echo "Generating PDF file..."
-	kdrfc --pdf $(MARKDOWN_FILE)
+	@echo "Generating PDF file using remote service..."
+	kdrfc --pdf --remote $(MARKDOWN_FILE)
 
 # Clean generated files
 clean:
