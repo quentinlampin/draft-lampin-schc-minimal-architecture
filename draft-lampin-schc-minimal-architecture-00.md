@@ -31,6 +31,42 @@ author:
         code: 38240
         country: France
         email: quentin.lampin@orange.com
+      -
+        ins: M. Dumay
+        name: Marion Dumay
+        org: Orange
+        street: Orange 3 Massifs - 22 Chemin du Vieux Chene
+        city: Meylan
+        code: 38240
+        country: France
+        email: marion.dumay@orange.com
+      -
+        ins: P. Surbayrole
+        name: Philippe Surbayrole
+        org: Orange
+        street: Orange 3 Massifs - 22 Chemin du Vieux Chene
+        city: Meylan
+        code: 38240
+        country: France
+        email: philippe.surbayrole@orange.com
+      -
+        ins: A. Pelov
+        name: Alexander Pelov
+        org: IMT Atlantique
+        street: 2 Rue de la Chataigneraie
+        city: Cesson-Sévigné
+        code: 35576
+        country: France
+        email: alexander.pelov@imt-atlantique.fr
+      -
+        ins: L. Toutain
+        name: Laurent Toutain
+        org: IMT Atlantique
+        street: 2 Rue de la Chataigneraie
+        city: Cesson-Sévigné
+        code: 35576
+        country: France
+        email: laurent.toutain@imt-atlantique.fr
 
 normative:
   RFC8724:
@@ -63,30 +99,32 @@ entity:
 
 --- abstract
 
-Static Context Header Compression and fragmentation (SCHC) framework
-provides both a header compression mechanism and an optional fragmentation mechanism. 
-SCHC operation is based on a common static Context stored at the two (or more) ends of a communication.
+Static Context Header Compression and fragmentation (SCHC) framework provides 
+both a header compression mechanism and an optional fragmentation mechanism. 
+SCHC operation is based on a common static Context stored at the two (or more) 
+ends of a communication.
 
-This document defines a minimal architecture for SCHC deployments, providing guidance
-for implementers and operators on the essential components and their interactions
-required for effective SCHC operation. The minimal architecture addresses the
-fundamental requirements for SCHC deployment while maintaining flexibility for
-various use cases and environments.
+This document defines a minimal architecture for SCHC deployments, providing 
+guidance for implementers and operators on the essential components and their 
+interactions required for effective SCHC operation. The minimal architecture
+addresses the fundamental requirements for SCHC deployment while maintaining 
+flexibility for various use cases and environments.
 
 --- middle
 
 # Introduction        
 
-The SCHC Working Group has developed the {{RFC8724}} SCHC technology
-for Low-Power Wide-Area (LPWA) networks, providing efficient header compression
-and fragmentation mechanisms. As SCHC adoption expands beyond its original scope,
-there is a need to define a minimal architecture that identifies only the essential
-elements required for proper SCHC operation.
+The SCHC Working Group has developed the {{RFC8724}} SCHC technology for 
+ Low-Power Wide-Area (LPWA) networks, providing efficient header compression
+ and fragmentation mechanisms. As SCHC adoption expands beyond its original 
+ scope, there is a need to define a minimal architecture that identifies only 
+ the essential elements required for proper SCHC operation.
 
-A minimal architecture for SCHC defines the essential components, their relationships,
-and the minimum requirements for a functional SCHC deployment. This architecture
-serves as a foundation that can be extended based on specific deployment requirements
-and use cases.
+A minimal architecture for SCHC defines the essential components, their 
+ relationships, and the minimum requirements for a functional SCHC deployment. 
+ This architecture
+ serves as a foundation that can be extended based on specific deployment
+ requirements and use cases.
 
 This document provides:
 
@@ -97,29 +135,41 @@ This document provides:
 # Requirements Notation
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in BCP 14 {{RFC2119}} {{RFC8174}} 
-when, and only when, they appear in all capitals, as shown here.
+ "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+ document are to be interpreted as described in BCP 14 {{RFC2119}} {{RFC8174}} 
+ when, and only when, they appear in all capitals, as shown here.
 
 # Terminology
 
 This section defines terminology and abbreviations used in this
-document. It borrows from the terminology of {{RFC8724}} and {{DRAFT-ARCH}}.
+ document. It borrows from the terminology of {{RFC8724}} and {{DRAFT-ARCH}}.
+ 
+In the following, terms used in the terminology are assumed to be defined in the
+context of the SCHC protocol unless specified otherwise, *.e.g* Endpoint refers
+to a SCHC Endpoint, Instance refers to a SCHC Instance, and so on.
 
-**SCHC Instance**: A logical component that implements the SCHC protocol,
-             including header compression, fragmentation, and context management.
 
-**SCHC Domain**: A network domain where SCHC instances share a common context for 
-            compression and fragmentation operations.
+**Endpoint**: A network host capable of compressing and decompressing headers 
+  and optionally fragmenting and reassembling packets. 
 
-**SCHC Domain Manager**: A logical component that manages the SCHC domain,
-                   including context synchronization and profile distribution.
+**Instance**: A logical component of an Endpoint that implements the SCHC 
+  protocol, including header compression, fragmentation, and context management. 
+
+**Profile**: A set of configurations that define how SCHC operations are 
+  performed within a specific Instance. It includes parameters for the different
+  SCHC components
+**Domain**: A network domain where SCHC instances share a common context 
+  for compression and fragmentation operations.
+
+**Domain Manager**: A logical component that manages the SCHC domain,
+  including context synchronization and profile distribution.
 
 **Context Repository**: A logical component that stores and manages SCHC
-                   contexts and rules used by SCHC entities.
+  contexts and rules used by SCHC domains.
 
-**Profile**: A set of parameters and rules that define how SCHC operations
-         are performed within a specific deployment scenario.
+
+
+
 
 # Minimal Architecture Components
 
@@ -129,10 +179,10 @@ document. It borrows from the terminology of {{RFC8724}} and {{DRAFT-ARCH}}.
 
 A SCHC Instance is the fundamental component that implements the SCHC protocol
   as defined in {{RFC8724}}. A Network host MAY executes several SCHC Instances
-  in its protocol stack. Every SCHC deployment MUST include at least two
-  SCHC instances to establish a compression/decompression relationship.
+  in its protocol stack.
 
-The functional architecture of a SCHC Instance is depicted in the following figure:
+The functional architecture of a SCHC Instance is depicted in the following 
+figure:
 
 ~~~~~~~~
 +-------------------------------------------------------------+
@@ -170,6 +220,13 @@ A SCHC Instance MUST implement the following components:
 * Context Minimal Manager
 * Profile Manager
 
+Its configuration MUST include:
+
+* a SCHC Context, which defines the set of C/D and F/R rules - or Set of Rules -
+  and the parser to be used to delineate the header field.
+* a SCHC Profile, which defines the configuration of the Dispatch Engine, the 
+  rule matching policy, and the device-specific configuration.
+
 
 A SCHC Instance MAY implement:
 
@@ -180,8 +237,8 @@ A SCHC Instance MAY implement:
 #### Header Compression and Decompression (C/D) engine
 
 This component is responsible for compressing and decompressing headers
-  using the SCHC protocol, as described in {{RFC8724}}. It applies the rules defined 
-  in the SCHC Context.
+  using the SCHC protocol, as described in {{RFC8724}}. It applies the rules 
+  defined in the SCHC Context.
   
 The C/D engine MUST expose the following interface:
 
@@ -231,28 +288,29 @@ The Dispatch Engine MUST provide the following functionality:
   
 ~~~~~~
           Endpoint 1                          Endpoint 2    
-+---------------------------+       +---------------------------+
-|   App. A    |    App. B   |       |   App. A    |    App. B   |
-+---------------------------+       +---------------------------+
-|             |   ||   UDP          |             |   ||   UDP 
-|             |   || DstPort        |             |   || DstPort   
-|    HTTP     |   ||    ==          |    HTTP     |   ||    ==     
-|             |   || 5678(CoAP)     |             |   || 5678(CoAP)
-+-------------|-------------+       +-------------|-------------+
-|    QUIC     |             |       |    QUIC     |             |
-+-------------|     SCHC    |       +-------------|     SCHC    |
-|    IPv6     |             |       |    IPv6     |             |
-+---------------------------+       +---------------------------+
-Ethertype ||         || Ethertype  Ethertype ||          || Ethertype
-    ==    ||         ||   ==            ==   ||          ||   ==
-  0x86DD  ||         ||  SCHC         0x86DD ||          ||  SCHC    
-+---------------------------+       +---------------------------+
-| Link layer, e.g. Ethernet |       | Link layer, e.g. Ethernet |
-+---------------------------+       +---------------------------+
-|  Network Interface Card   |       |  Network Interface Card   | 
-+---------------------------+       +---------------------------+
-|       Physical Layer      |       |       Physical Layer      |
-+---------------------------+       +---------------------------+
++-------------+-------------+       +-------------+-------------+
+|   App. A    |    App. B   |       |   App. A    |    App. B   |   
++-------------+-------------+       +-------------+-------------+   
+|    HTTP     |     CoAP    |       |    HTTP     |     CoAP    |   
++-------------+-------------+       +-------------+-------------+   
+|    QUIC     |     UDP     |       |    QUIC     |     UDP     |      
++-------------+-------------+       +-------------+-------------+   
+|     UDP     |    IPv6     |       |     UDP     |    IPv6     |   
++-------------+-------------+       +-------------+-------------+   
+|    IPv6     |    SCHC     |       |    IPv6     |    SCHC     |   
++---------------------------+       +---------------------------+   
+Ethertype ||        || Ethertype    Ethertype ||        || Ethertype
+    ==    ||        ||   ==             ==    ||        ||   == 
+  0x86DD  ||        ||  SCHC          0x86DD  ||        ||  SCHC
++---------------------------+       +---------------------------+     
+|     Dispatch Engine       |       |     Dispatch Engine       |     
++---------------------------+       +---------------------------+   
+| Link layer, e.g. Ethernet |       | Link layer, e.g. Ethernet |   
++---------------------------+       +---------------------------+   
+|  Network Interface Card   |       |  Network Interface Card   |    
++---------------------------+       +---------------------------+   
+|       Physical Layer      |       |       Physical Layer      |   
++---------------------------+       +---------------------------+   
             | |                                  | |
             | |                                  | |
             | +----------------------------------+ |
@@ -265,8 +323,9 @@ In this simple scenario, the Dispatch Engine is integrated into the network stac
  This is the classic case for SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}},
  {{RFC9363}}.
 
-The dispatching is done based on a identified header field, such as the an ethertype, 
- the IPv6 Next Header field, a specific UDP port. 
+The dispatching is done based on a identified header field, such as the an 
+ ethertype, the IPv6 Next Header field, a specific UDP port... Note that each header of the protocols
+ compressed by SCHC must be built before compression with SCHC.
 
 In the example above, 
 
@@ -275,7 +334,7 @@ In the example above,
  compresses the CoAP, UDP and IPv6 headers, and delivers the compressed packet to the Dispatch Engine, 
  which then sends it over the network, setting the appropriate SCHC ethertype in the link layer header.
 
-* Packets received from the network that match the SCHC ethertype are processed in the reverse order. 
+* Packets received from the network matching the SCHC ethertype are processed in the reverse order. 
  The Dispatch Engine receives the SCHC packet and routes it to the SCHC Instance for CoAP over UDP over IPv6.
  The SCHC Instance then decompresses the packet and delivers it to the appropriate application or protocol routine.
 
@@ -300,26 +359,43 @@ In this case, the Dispatch Engine is a separate component that
 
 ~~~~~~~
                          Endpoint
-+--------------------------------------------------------+
-|   App. A     |    App. C   |    App. D   |    App. E   |
-+--------------+-------------+-------------+-------------+
-|     QUIC     |     CoAP    |    MQTT     |     HTTP    |
-+--------------|-------------|-------------+-------------|
-|                 Dispatch                 |             |
-|                  Hook 1                  |             |
-|               (dport 5768)               |             |
-|                                          |             |
-|                    UDP                   |     TCP     |
-+------------------------------------------+-------------+
-|                   IPv6                   |     IPv4    |
-+------------------------------------------+-------------+
-|                   MPLS                   |             |
-+------------------------------------------+             |
-|                         Ethernet                       |
-+--------------------------------------------------------+
++------------------------------------------+
+|   App. A     |    App. B   |    App. C   |
++--------------+-------------+-------------+
+|     QUIC     |     CoAP    |     HTTP    |
++--------------|-------------+-------------|
+|   Dispatch      Dispatch   |             |         Hooks
+|    Hook 1    .   Hook 3    |             +           |
+|  (dport 443)  (dport 5768) |             |           |
+|              .             |             |  +------------------+
+|             UDP            |     TCP     |  | Dispatch Engine  |
++----------------------------+-------------+  +------------------+
+|             IPv6           |     IPv4    |   1 .     . 2
++----------------------------+-------------+     .     .
+|  Dispatch    .   Dispatch  |             | +------------+ 
+|   Hook 2          Hook 4   |             | |SCHC Inst.#1|
+|   label      .    label    |             | +------------+
+| 0xabcd0180      0xabce0180 |             | |   .     .  |
+|                            |             | |   v     .  |
+|             MPLS           |             | |compress .  |
++----------------------------+             | |         v  |
+|          Ethertype                       | |  decompress|
+|              ==                          | +------------+
+|            0x8847                        |
+|                  Ethernet                |
++------------------------------------------+
 
 ~~~~~~~
 
+In the example above, the Dispatch Engine is implemented as a hook that intercepts
+  packets based on their UDP destination port. In this instance, it routes packets with
+  a destination port of 5768 to the SCHC Instance for CoAP over UDP. The Dispatch Engine
+  then compresses the CoAP, UDP, and IPv6 headers, adds a MPLS header with appropriate tag
+  and sends the compressed packet over the network.
+
+When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS label and routes
+  matching packets (MPLS label == 0xabcd0180 && UDP destination port == 5768) them to the
+  appropriate SCHC Instance based on the defined admission rules in the profile.
 
 
 ### Context Management
