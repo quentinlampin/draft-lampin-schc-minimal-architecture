@@ -217,7 +217,7 @@ figure:
 A SCHC Instance MUST implement the following components:
 
 * Header Compression and Decompression (C/D) engine
-* Context Minimal Manager
+* Context Manager
 * Profile Manager
 
 Its configuration MUST include:
@@ -242,16 +242,16 @@ This component is responsible for compressing and decompressing headers
   
 The C/D engine MUST expose the following interface:
 
-- `compress(buffer, context, profile)`: Compresses the provided buffer using the SCHC Context
-  and the profile.
-- `decompress(buffer, context, profile)`: Decompresses the provided buffer using the SCHC Context
-  and the profile.
+- `compress(buffer, context, profile)`: Compresses the provided buffer using the
+   SCHC Context and the profile.
+- `decompress(buffer, context, profile)`: Decompresses the provided buffer using
+   the SCHC Context and the profile.
 
 Internally, on compression, the C/D engine:
 
 - delineates the fields using the parser identified in the SCHC Context.
-- elects the appropriate compression rules based on the SCHC Context and the matching policy
-   defined in the profile.
+- elects the appropriate compression rules based on the SCHC Context and the 
+  matching policy defined in the profile.
 - applies the compression rules to the fields of the header.
 - generates the compressed SCHC packet.
   
@@ -279,12 +279,12 @@ The Dispatch Engine MUST provide the following functionality:
 
 - `dispatch_compress(buffer, admission_rules)`: dispatch a packet to the 
     appropriate SCHC Instance based on packet admission rules.
-- `dispatch_decompress(buffer, context, profile)`: dispatch the compressed packet 
-    to the correct recipient, .e.g. application or protocol routine.
+- `dispatch_decompress(buffer, context, profile)`: dispatch the compressed 
+    packet to the correct recipient, .e.g. application or protocol routine.
 
 **Dispatch scenarios**:
 
-#### Case 1: The Dispatch Engine is integrated into the network stack / single SCHC instance.
+#### Case 1: The Dispatch Engine is integrated into the network stack
   
 ~~~~~~
           Endpoint 1                          Endpoint 2    
@@ -293,18 +293,31 @@ The Dispatch Engine MUST provide the following functionality:
 +-------------+-------------+       +-------------+-------------+   
 |    HTTP     |     CoAP    |       |    HTTP     |     CoAP    |   
 +-------------+-------------+       +-------------+-------------+   
-|    QUIC     |     UDP     |       |    QUIC     |     UDP     |      
-+-------------+-------------+       +-------------+-------------+   
-|     UDP     |    IPv6     |       |     UDP     |    IPv6     |   
-+-------------+-------------+       +-------------+-------------+   
-|    IPv6     |    SCHC     |       |    IPv6     |    SCHC     |   
+|  QUIC/UDP   |     UDP     |       |  QUIC/UDP   |     UDP     |      
++-------------+-------------+       +-------------+-------------+
+|            IPv6           |       |            IPv6           |   
++-------------+-------------+       +-------------+-------------+
+|                ^      |   |       |                           |
+|                |  UDP Dest|       |      Dispatch Engine      |
+|                | Port 5678|       |                           |
+|                |      |   |       |                           |   
++----------------+------+---+       +---------------------------+
+    IPv6         |      |                 |
+    datagram     |      |
+        +------------+  |
+        | SCHC Inst. |  | IPv6
+        | Decompress.|  | datagram
+        +------------+  V 
+            ^  +------------+
+            |  | SCHC Inst. |
+            |  | Compress.  |
+SCHC packet |  +------------+
+            |        |
+            |        V SCHC packet
 +---------------------------+       +---------------------------+   
-Ethertype ||        || Ethertype    Ethertype ||        || Ethertype
-    ==    ||        ||   ==             ==    ||        ||   == 
-  0x86DD  ||        ||  SCHC          0x86DD  ||        ||  SCHC
-+---------------------------+       +---------------------------+     
-|     Dispatch Engine       |       |     Dispatch Engine       |     
-+---------------------------+       +---------------------------+   
+|       Ethertype Ethertype |
+|         == SCHC  := SCHC  |
+|                           |
 | Link layer, e.g. Ethernet |       | Link layer, e.g. Ethernet |   
 +---------------------------+       +---------------------------+   
 |  Network Interface Card   |       |  Network Interface Card   |    
@@ -318,18 +331,27 @@ Ethertype ||        || Ethertype    Ethertype ||        || Ethertype
               
 ~~~~~~
 
-In this simple scenario, the Dispatch Engine is integrated into the network stack and there is 
- a predefined SCHC Instance for a specific protocol stack, such as CoAP over UDP over IPv6. 
- This is the classic case for SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}},
+In this simple scenario, the Dispatch Engine is integrated into
+ the network stack and there is a predefined SCHC Instance for a specific 
+ protocol stack, such as CoAP over UDP over IPv6. This is the classic case for 
+ SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}}, 
  {{RFC9363}}.
 
+
+
 The dispatching is done based on a identified header field, such as the an 
- ethertype, the IPv6 Next Header field, a specific UDP port... Note that each header of the protocols
- compressed by SCHC must be built before compression with SCHC.
+ ethertype, the IPv6 Next Header field, a specific UDP port, etc.
+ 
+This implementation scenario therefore assumes that the endpoint Operating 
+ System (OS) implements the SCHC protocol as part of its network stack and that 
+ SCHC is allocated the appropriate ethertype, IPv6 Next Header value or UDP 
+ port from IANA.
+
 
 In the example above, 
 
-* the Dispatch "intercepts" outbound packets whose UDP destination port is 5678, which is used by CoAP. 
+* the Dispatch "intercepts" outbound packets whose UDP destination port is 5678, 
+  which is used by CoAP. 
  It then routes these packets to the SCHC Instance for CoAP over UDP over IPv6. The SCHC instance then 
  compresses the CoAP, UDP and IPv6 headers, and delivers the compressed packet to the Dispatch Engine, 
  which then sends it over the network, setting the appropriate SCHC ethertype in the link layer header.
