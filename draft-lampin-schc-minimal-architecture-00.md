@@ -296,28 +296,36 @@ The Dispatch Engine MUST provide the following functionality:
 |  QUIC/UDP   |     UDP     |       |  QUIC/UDP   |     UDP     |      
 +-------------+-------------+       +-------------+-------------+
 |            IPv6           |       |            IPv6           |   
-+-------------+-------------+       +-------------+-------------+
-|                ^      |   |       |                           |
-|                |  UDP Dest|       |      Dispatch Engine      |
-|                | Port 5678|       |                           |
-|                |      |   |       |                           |   
-+----------------+------+---+       +---------------------------+
-    IPv6         |      |                 |
-    datagram     |      |
-        +------------+  |
-        | SCHC Inst. |  | IPv6
-        | Decompress.|  | datagram
-        +------------+  V 
-            ^  +------------+
-            |  | SCHC Inst. |
-            |  | Compress.  |
-SCHC packet |  +------------+
-            |        |
-            |        V SCHC packet
++-----+-------+-------------+       +-------------+-------------+
+|    ^           ^      |   |       |    ^           ^      |   |
+|    |  Dispatch |  UDP Dest|       |    |  Dispatch |  UDP Src |
+|    |   Engine  | Port 5678|       |    |   Engine  | Port 5678|
+|    |           |      |   |       |    |           |      |   |   
++----+-----------+------+---+       +----+-----------+----------+
+    IPv6         |     IPv6             IPv6         |     IPv6    
+  datagram       |   datagram         datagram       |   datagram
+     | +---------+------+-----+          | +---------+------+-----+
+     | |     SCHC Instance    |          | |     SCHC Instance    |
+     | +---------+------+-----+          | +---------+------+-----+
+     | |         |      |     |          | |         |      |     |
+     | |+------------+  |     |          | |+------------+  |     |
+     | || SCHC Inst. |  |     |          | || SCHC Inst. |  |     |
+     | || Decompress.|datagram|          | || Decompress.|datagram|
+     | |+------------+  V     |          | |+------------+  V     |
+     | |    ^  +------------+ |          | |    ^  +------------+ |
+     | |    |  | SCHC Inst. | |          | |    |  | SCHC Inst. | |
+     | |    |  | Compress.  | |          | |    |  | Compress.  | |
+     | |    |  +------------+ |          | |    |  +------------+ |
+     | |    |        |        |          | |    |        |        |
+     | +----+--------+--------+          | +----+--------+--------+
+     |     SCHC     SCHC                 |     SCHC     SCHC 
+     |    Packet   packet                |    Packet   packet
+     |      |        |                   |      |        |
+     v      |        V                   |      |        V    
 +---------------------------+       +---------------------------+   
-|       Ethertype Ethertype |
-|         == SCHC  := SCHC  |
-|                           |
+|       Ethertype Ethertype |       |       Ethertype Ethertype |
+|         == SCHC  := SCHC  |       |         == SCHC  := SCHC  |
+|                           |       |                           |
 | Link layer, e.g. Ethernet |       | Link layer, e.g. Ethernet |   
 +---------------------------+       +---------------------------+   
 |  Network Interface Card   |       |  Network Interface Card   |    
