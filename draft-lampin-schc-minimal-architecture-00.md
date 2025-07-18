@@ -191,7 +191,7 @@ This section considers a simple point-to-point deployment scenario
 +------------------+       +------------------+
 |       IPv6       |       |       IPv6       |
 +------------------+       +------------------+
-|     SCHC C/D     |       |     SCHC C/D     |
+|  SCHC Instance   |       |  SCHC Instance   |
 +------------------+       +------------------+
 | LPWAN Link Layer |       | LPWAN Link Layer |
 +------------------+       +------------------+
@@ -201,22 +201,48 @@ This section considers a simple point-to-point deployment scenario
          +---------------------------+
 ~~~~~~~~
 
-In this scenario, both Host A and Host B implement the SCHC protocol
- for header compression and decompression. Both hosts feature a single 
- application and all traffic is sent and received using the CoAP protocol over
- UDP over IPv6. The SCHC protocol is used to compress the CoAP, UDP, and IPv6
- headers before sending the packets over the LPWAN link layer. The SCHC
- protocol is implemented as a single SCHC Instance on each host, and all traffic
- is compressed and decompressed using those SCHC Instances.
+In this scenario, 
 
-Why `Instance`?: Here we use the term SCHC `Instance` to refer to the SCHC 
+
+- Both Host A and Host B implement the SCHC protocol for header compression and 
+  decompression. 
+- Both hosts feature a single application and all traffic is sent and received 
+  using the CoAP protocol over UDP over IPv6. 
+- The SCHC protocol is used to compress the CoAP, UDP, and IPv6
+  headers before sending the packets over the LPWAN link layer. 
+- The SCHC protocol is implemented as a single SCHC `Instance` on each host.
+- The SCHC Instance is hardwired into the protocol stack of each host, 
+  meaning that it is not dynamically loaded or unloaded.
+- All of the traffic is compressed and decompressed using those SCHC Instances.
+- The packets feature little variations in their headers, requiring little to no
+  Compression Rules updates.
+
+
+**Why `Instance`?** Here we use the term SCHC `Instance` to refer to the SCHC 
  protocol routine that is running on each host. This is different from the SCHC
- `Instance` defined in {{DRAFT-ARCH}}, which refers to a pair of SCHC endpoints
- that communicate through SCHC. The rationale for this terminology is that the 
- term `Instance` is often used to refer to a specific realization of a class in
- object-oriented programming, and in this case, the SCHC Instance is a specific
- realization of the SCHC protocol that is running on each host.
+ Instance defined in {{DRAFT-ARCH}}, which refers to a pair of SCHC endpoints
+ that communicate through SCHC. 
  
+ The rationale for this terminology is that the term `Instance` is often used to
+ refer to a specific realization of a class in object-oriented programming, and 
+ in this case, the SCHC Instance is a specific realization of the SCHC protocol 
+ that is running on each host.
+ 
+### Requirements for the minimal architecture
+
+In this simplistic scenario, which is representative of some LPWAN deployments,
+ the requirements for the minimal architecture are as follows:
+
+ - The Set of Rules (SoR) used for compression and decompression is static and
+   does not change over time. It can be hardcode in the SCHC Instance or
+   configured at startup. This means that the SCHC Instance does not need to
+   expose an interface for updating the SoR dynamically.
+ - However, the Set Of Rules (SoR) of Host A MUST be compatible with the SoR of
+   Host B. Such compatitibility requires that rules IDs and Rule Descriptors are
+   consistent between the two hosts.
+   
+
+
 
 
 
