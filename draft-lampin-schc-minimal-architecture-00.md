@@ -155,6 +155,10 @@ to a SCHC Endpoint, Instance refers to a SCHC Instance, and so on.
 **Instance**: A logical component of an Endpoint that implements the SCHC 
   protocol, including header compression, fragmentation, and context management. 
 
+**Dispatcher**: A logical component that routes packets to the appropriate SCHC 
+  Instance based on defined admission rules. It can be integrated into the 
+  network stack or implemented as a separate component.
+
 **Profile**: A set of configurations that define how SCHC operations are 
   performed within a specific Instance. It includes parameters for the different
   SCHC components
@@ -250,9 +254,9 @@ The C/D engine MUST expose the following interface:
 Internally, on compression, the C/D engine:
 
 - delineates the fields using the parser identified in the SCHC Context.
-- elects the appropriate compression rules based on the SCHC Context and the 
+- chooses the appropriate compression rule based on the SCHC Context and the 
   matching policy defined in the profile.
-- applies the compression rules to the fields of the header.
+- applies the compression rule to the fields of the header.
 - generates the compressed SCHC packet.
   
 On decompression, the C/D engine:
@@ -268,27 +272,60 @@ This component is responsible for fragmenting larger packets into smaller
   the minimal architecture but recommended for scenarios where packet sizes
   exceed the maximum transmission unit (MTU) of the underlying network.
 
-### Dispatch Engine
+### Dispatcher
 
-The Dispatch Engine is responsible for delivering compressed packets to the
-  correct SCHC Instance. It ensures that the compressed packets are sent to
-  the appropriate destination and that the decompressed packets are delivered
-  to the correct application or protocol routine.
+The Dispatcher is responsible for delivering compressed packets to the
+  correct SCHC Instance. It ensures that the compressed packets are sent
+  to the appropriate destination and that the decompressed packets are
+  delivered to the correct application or protocol routine.
 
-The Dispatch Engine MUST provide the following functionality:
+The Dispatcher is a key component that enables the coexistence of multiple
+  SCHC Instances on the same network host, allowing different protocols or
+  applications to use SCHC compression and decompression mechanisms. It also
+  allows regular traffic to coexist with SCHC-compressed traffic.
 
-- `dispatch_compress(buffer, admission_rules)`: dispatch a packet to the 
-    appropriate SCHC Instance based on packet admission rules.
-- `dispatch_decompress(buffer, context, profile)`: dispatch the compressed 
-    packet to the correct recipient, .e.g. application or protocol routine.
+~~~~~~~~
 
-The rationale for the Dispatch Engine is to allow multiple SCHC Instances to 
- coexist on the same network host, each handling different protocols or 
- applications. Additionally, it also allows the coexistence of regular traffic 
- to coexist with traffic compressed by SCHC.
-  
-  To do so, The Dispatch Engine provides a mechanism to route packets to the 
-  appropriate SCHC Instance based on supplied admission rules.
++---------------------------------------------------------------------+
+|                           Dispatcher                                |
++---------------------------------------------------------------------+
+|                                                                     |
+|  +-------------------------------------------------------------+    |
+|  |                     Dispatch Engine                         |    |
+|  |                                                             |    |
+|  | - register_compression_cb(schc_instance, admission_rules)   |    |
+|  | - register_decompression_cb(schc_instance, admission_rules) |    |
+|  |                                                             |    |
+|  +-------------------------------------------------------------+    |
+|                                                                     |
+|  +-------------------------------------------------------------+    |
+|  |                     Configuration                           |    |
+|  +-------------------------------------------------------------+    |
+|  |                                                             |    |
+|  | - compression_callbacks: [                                  |    |
+|  |     (schc_instance1, c_admission_rules_1),                  |    |
+|  |     (schc_instance2, c_admission_rules_2),                  |    |
+|  |     ...                                                     |    |
+|  |   ]                                                         |    |   
+|  | - decompression_callbacks: [                                |    |
+|  |     (schc_instance1, admission_rules_1),                    |    |
+|  |     (schc_instance2, admission_rules_2),                    |    |
+|  |   ...                                                       |    |
+|  |   ]                                                         |    |
+|  +-------------------------------------------------------------+    |
++---------------------------------------------------------------------+
+
+- `register_compression_hook(admission_rules)`:
+    registers a compression hook with the Dispatch Engine, which is used to 
+    identify packets that should be compressed by SCHC. The admission rules 
+    define the criteria for packet selection, such as specific header fields or 
+    values.
+- `register_decompression_hook(admission_rules)`:
+    registers a decompression hook with the Dispatch Engine, which is used to 
+    identify packets that should be decompressed by SCHC. The admission rules 
+    define the criteria for packet selection, such as specific header fields or 
+    values.
+
 
 **Dispatch scenarios**:
 
@@ -385,19 +422,20 @@ Note that in this example, regular HTTP over QUIC traffic is also present on the
 
 In this case, the Dispatch Engine is a separate component that
  interacts with multiple SCHC Instances. It is responsible for routing packets
- to the appropriate SCHC Instance based on the packet type and defined
+ to the appropriate SCHC Instance based on the packet type and supplied
  admission rules. 
 
  - On Linux, this can be implemented using netfilter hooks or similar mechanisms
   to intercept packets and route them to and from the appropriate SCHC Instance. 
 
- - On macOS, the Dispatch Engine can be implemented as a kernel extension or user-space
-   application that make use of PF, the native packet filter.
+ - On macOS, the Dispatch Engine can be implemented as a kernel extension or 
+ user-space application that make use of PF, the native packet filter.
 
- The exact implementation details of the Dispatch Engine will depend on the Operating System,
- which therefore is not specified in this document. However, a description of packets criteria
- and admission rules is provided in the SCHC profile, which is used by the Dispatch Engine
-to determine how to route packets.
+ The exact implementation details of the Dispatch Engine will depend on the 
+ Operating System, which therefore is not specified in this document. However, 
+ a description of packets criteria and admission rules is provided in the SCHC 
+ profile, which is used by the Dispatch Engine to determine how to route 
+ packets.
 
 ~~~~~~~
                          Endpoint
@@ -429,15 +467,17 @@ to determine how to route packets.
 
 ~~~~~~~
 
-In the example above, the Dispatch Engine is implemented as a hook that intercepts
-  packets based on their UDP destination port. In this instance, it routes packets with
-  a destination port of 5768 to the SCHC Instance for CoAP over UDP. The Dispatch Engine
-  then compresses the CoAP, UDP, and IPv6 headers, adds a MPLS header with appropriate tag
-  and sends the compressed packet over the network.
+In the example above, the Dispatch Engine is implemented as a filter that 
+ intercepts packets based on their UDP destination port. In this instance, it 
+ routes packets with a destination port of 5768 to the SCHC Instance for CoAP 
+ over UDP over IPv6. The Dispatch Engine then compresses the CoAP, UDP, and IPv6
+ headers, adds a MPLS header with appropriate tag and sends the compressed 
+ packet over the network.
 
-When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS label and routes
-  matching packets (MPLS label == 0xabcd0180 && UDP destination port == 5768) them to the
-  appropriate SCHC Instance based on the defined admission rules in the profile.
+When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS 
+label and routes matching packets (MPLS label == 0xabcd0180 && UDP destination 
+port == 5768) them to the appropriate SCHC Instance based on the defined 
+admission rules in the profile.
 
 
 ### Context Management
