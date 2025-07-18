@@ -282,6 +282,14 @@ The Dispatch Engine MUST provide the following functionality:
 - `dispatch_decompress(buffer, context, profile)`: dispatch the compressed 
     packet to the correct recipient, .e.g. application or protocol routine.
 
+The rationale for the Dispatch Engine is to allow multiple SCHC Instances to 
+ coexist on the same network host, each handling different protocols or 
+ applications. Additionally, it also allows the coexistence of regular traffic 
+ to coexist with traffic compressed by SCHC.
+  
+  To do so, The Dispatch Engine provides a mechanism to route packets to the 
+  appropriate SCHC Instance based on supplied admission rules.
+
 **Dispatch scenarios**:
 
 #### Case 1: The Dispatch Engine is integrated into the network stack and a single SCHC Instance is used.
@@ -363,28 +371,33 @@ In the example above,
   appropriate SCHC ethertype in the link layer header.
 
 * On Endpoint 2, incoming packets whose SCHC ethertype is set to the SCHC value
-  are routed to the SCHC Instance for CoAP over UDP over IPv6. The SCHC Instance 
+  are routed to the SCHC Instance for CoAP over UDP over IPv6. The SCHC Instance
   decompresses the SCHC packets and delivers them to the IPv6 layer.
 
+Note that in this example, regular HTTP over QUIC traffic is also present on the
+ same Endpoint. The Dispatch Engine is able to discriminate those packets from 
+ packets that are compressed by SCHC, as the HTTP over QUIC packets do not
+ not match the admission rules defined in the SCHC profile, here
+ `UDP Destination Port == 5678`.
 
 
 #### Case 2: The Dispatch engine lives outside of the network stack.
 
 In this case, the Dispatch Engine is a separate component that
-  interacts with multiple SCHC Instances. It is responsible for routing packets
-  to the appropriate SCHC Instance based on the packet type and defined
-  admission rules. 
+ interacts with multiple SCHC Instances. It is responsible for routing packets
+ to the appropriate SCHC Instance based on the packet type and defined
+ admission rules. 
 
-  - On Linux, this can be implemented using netfilter hooks or similar mechanisms
+ - On Linux, this can be implemented using netfilter hooks or similar mechanisms
   to intercept packets and route them to and from the appropriate SCHC Instance. 
 
-  - On macOS, the Dispatch Engine can be implemented as a kernel extension or user-space
-  application that make use of PF, the native packet filter.
+ - On macOS, the Dispatch Engine can be implemented as a kernel extension or user-space
+   application that make use of PF, the native packet filter.
 
-  The exact implementation details of the Dispatch Engine will depend on the Operating System,
-  which therefore is not specified in this document. However, a description of packets criteria
-  and admission rules is provided in the SCHC profile, which is used by the Dispatch Engine
-  to determine how to route packets.
+ The exact implementation details of the Dispatch Engine will depend on the Operating System,
+ which therefore is not specified in this document. However, a description of packets criteria
+ and admission rules is provided in the SCHC profile, which is used by the Dispatch Engine
+to determine how to route packets.
 
 ~~~~~~~
                          Endpoint
