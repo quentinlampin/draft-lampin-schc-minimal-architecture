@@ -284,7 +284,7 @@ The Dispatch Engine MUST provide the following functionality:
 
 **Dispatch scenarios**:
 
-#### Case 1: The Dispatch Engine is integrated into the network stack
+#### Case 1: The Dispatch Engine is integrated into the network stack and a single SCHC Instance is used.
   
 ~~~~~~
           Endpoint 1                          Endpoint 2    
@@ -310,7 +310,7 @@ The Dispatch Engine MUST provide the following functionality:
      | |         |      |     |          | |         |      |     |
      | |+------------+  |     |          | |+------------+  |     |
      | || SCHC Inst. |  |     |          | || SCHC Inst. |  |     |
-     | || Decompress.|datagram|          | || Decompress.|datagram|
+     | || Decompress.|  |     |          | || Decompress.|  |     |
      | |+------------+  V     |          | |+------------+  V     |
      | |    ^  +------------+ |          | |    ^  +------------+ |
      | |    |  | SCHC Inst. | |          | |    |  | SCHC Inst. | |
@@ -321,7 +321,7 @@ The Dispatch Engine MUST provide the following functionality:
      |     SCHC     SCHC                 |     SCHC     SCHC 
      |    Packet   packet                |    Packet   packet
      |      |        |                   |      |        |
-     v      |        V                   |      |        V    
+     v      |        V                   V      |        V    
 +---------------------------+       +---------------------------+   
 |       Ethertype Ethertype |       |       Ethertype Ethertype |
 |         == SCHC  := SCHC  |       |         == SCHC  := SCHC  |
@@ -340,12 +340,10 @@ The Dispatch Engine MUST provide the following functionality:
 ~~~~~~
 
 In this simple scenario, the Dispatch Engine is integrated into
- the network stack and there is a predefined SCHC Instance for a specific 
+ the network stack and there is a unique predefined SCHC Instance for a specific 
  protocol stack, such as CoAP over UDP over IPv6. This is the classic case for 
  SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}}, 
  {{RFC9363}}.
-
-
 
 The dispatching is done based on a identified header field, such as the an 
  ethertype, the IPv6 Next Header field, a specific UDP port, etc.
@@ -355,18 +353,19 @@ This implementation scenario therefore assumes that the endpoint Operating
  SCHC is allocated the appropriate ethertype, IPv6 Next Header value or UDP 
  port from IANA.
 
-
 In the example above, 
 
-* the Dispatch "intercepts" outbound packets whose UDP destination port is 5678, 
-  which is used by CoAP. 
- It then routes these packets to the SCHC Instance for CoAP over UDP over IPv6. The SCHC instance then 
- compresses the CoAP, UDP and IPv6 headers, and delivers the compressed packet to the Dispatch Engine, 
- which then sends it over the network, setting the appropriate SCHC ethertype in the link layer header.
+* On Endpoint 1, the Dispatch "intercepts" outbound packets whose UDP 
+  destination port is 5678, which is used by CoAP. It then routes these packets 
+  to the SCHC Instance for CoAP over UDP over IPv6. The SCHC instance 
+  then compresses the CoAP, UDP and IPv6 headers, and calls the Link Layer
+  interface to send the compressed packet over the network, setting the
+  appropriate SCHC ethertype in the link layer header.
 
-* Packets received from the network matching the SCHC ethertype are processed in the reverse order. 
- The Dispatch Engine receives the SCHC packet and routes it to the SCHC Instance for CoAP over UDP over IPv6.
- The SCHC Instance then decompresses the packet and delivers it to the appropriate application or protocol routine.
+* On Endpoint 2, incoming packets whose SCHC ethertype is set to the SCHC value
+  are routed to the SCHC Instance for CoAP over UDP over IPv6. The SCHC Instance 
+  decompresses the SCHC packets and delivers them to the IPv6 layer.
+
 
 
 #### Case 2: The Dispatch engine lives outside of the network stack.
