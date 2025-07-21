@@ -407,6 +407,18 @@ This scenario highlights the need for a dynamic context update mechanism
 - How to ensure that all `Instances` are updated with the new `Context`?
 - How to process packets sent before the `Context` update but received after?
 
+Answering those specific questions is critical for the proper operation of SCHC 
+ in this scenario as unsynchronized `Contexts` can lead to packet loss or 
+ misinterpretation at the receiving end.
+
+ It is worth noting that the same questions arise in the context of 
+ configuration management and are possibly addressed by existing IETF protocols.
+
+ Nevertheless, we can already identify the need for the following:
+
+- A `Context Repository` that is responsible for storing the `Contexts` of
+  the domain. In case of disagreement between `Instances`, the `Context 
+  Repository` is used to resolve the disagreement.
 
 
 ## Core Components Illustrated
