@@ -188,7 +188,7 @@ This section considers a simple point-to-point deployment scenario
 
 ~~~~~~~~
 +------------------+       +------------------+
-|     Host A       |       |     Host B       |
+|    Endpoint A    |       |    Endpoint B    |
 +------------------+       +------------------+
 |  Application A   |       |  Application B   |
 +------------------+       +------------------+
@@ -211,14 +211,14 @@ This section considers a simple point-to-point deployment scenario
 In this scenario, 
 
 
-- Both Host A and Host B implement the SCHC protocol for header compression and 
+- Both Endpoint A and Endpoint B implement the SCHC protocol for header compression and 
   decompression. 
-- Both hosts feature a single application and all traffic is sent and received 
+- Both endpoints feature a single application and all traffic is sent and received 
   using the CoAP protocol over UDP over IPv6. 
 - The SCHC protocol is used to compress the CoAP, UDP, and IPv6
   headers before sending the packets over the LPWAN link layer. 
-- The SCHC protocol is implemented as a single SCHC `Instance` on each host.
-- The SCHC `Instance` is hardwired into the protocol stack of each host, 
+- The SCHC protocol is implemented as a single SCHC `Instance` on each endpoint.
+- The SCHC `Instance` is hardwired into the protocol stack of each endpoint, 
   meaning that it is not dynamically loaded or unloaded.
 - All of the traffic is compressed and decompressed using those SCHC Instances.
 
@@ -240,14 +240,14 @@ In this simplistic scenario, which is representative of some LPWAN deployments,
 ### Discussions
 
 **Why `Instance`?** Here we use the term SCHC `Instance` to refer to the SCHC 
- protocol routine that is running on each host. This is different from the SCHC
+ protocol routine that is running on each endpoint. This is different from the SCHC
  Instance defined in {{DRAFT-ARCH}}, which refers to a pair of SCHC endpoints
  that communicate through SCHC. 
  
  The rationale for this terminology is that the term `Instance` is often used to
  refer to a specific realization of a class in object-oriented programming, and 
  in this case, the SCHC Instance is a specific realization of the SCHC protocol 
- that is running on each host.
+ that is running on each endpoint.
 
 **Session vs Instance**: In this document, we use the term `Session` to refer to
  a communication session between two (or more) SCHC Instances that are 
@@ -268,7 +268,7 @@ In this section, we consider a more complex deployment scenario where two or
  
 ~~~~~~~~
 +------------------+    +------------------+    +------------------+
-|     Host A       |    |      Host B      |    |     Host C       |
+|    Endpoint A    |    |    Endpoint B    |    |    Endpoint C    |
 +------------------+    +------------------+    +------------------+
 |  Application A   |    |  Application B   |    |  Application A   |
 +------------------+    +------------------+    +------------------+
@@ -288,16 +288,16 @@ In this section, we consider a more complex deployment scenario where two or
          +--------------------+       +-------------------+            
 ~~~~~~~~
 
-In this scenario, we have three hosts, Host A, Host B, and Host C, that 
- communicate with each other using SCHC. Here, Host A and Host C are typically
- sensors or devices that send data to Host B, which is a gateway or server that
- collects and processes the data.
+In this scenario, we have three endpoints, Endpoint A, Endpoint B, 
+ and Endpoint C, that communicate with each other using SCHC. Here, Endpoint A 
+ and Endpoint C are typically sensors or devices that send data to Endpoint B, 
+ which is a gateway or server that collects and processes the data.
  
- We further assume that Host A and C have very similar traffic patterns,
- meaning that they send similar packets to Host B. This allows the SCHC 
- `Instances` on Host A, B and C to share the same SCHC Context, which reduces 
- the complexity of administration and management of this deployment. 
- In the following, we refer to SCHC `Instances` that sare a common SCHC Context
+ We further assume that Endpoints A and C have very similar traffic patterns,
+ meaning that they send similar packets to Endpoint B. This allows the SCHC
+ `Instances` on Host A, B and C to share the same SCHC Context, which reduces
+ the complexity of administration and management of this deployment.
+ In the following, we refer to SCHC `Instances` that share a common SCHC Context
  as a SCHC `Domain`.
 
 
@@ -306,17 +306,21 @@ In this scenario, we have three hosts, Host A, Host B, and Host C, that
 In this typical IoT deployment scenario, the requirements for the minimal 
 architecture are as follows:
 
-- The SCHC Context of Host A MUST be compatible with the SCHC Context of Host B
-  and Host C. This means that the SoR, parsers, and rule IDs are consistent 
-  between the three `Instances`.
-- The SCHC Context MUST be synchronized between the three `Instances`. This 
-  means that the SCHC Context MUST be updated on all three `Instances` whenever 
-  a new SCHC Session is established.
+- The SCHC Context of Endpoint A MUST be compatible with the SCHC Context of 
+  Endpoint B and Endpoint C. This means that the SoR, parsers, and rule IDs are
+  consistent between the three `Instances`.
+- The SCHC Context MUST be synchronized between the three `Instances`. This
+  means that an updated SCHC Session between all three `Instances` is 
+  established whenever the `Context` is updated or modified.
 
 ### Discussions
 
-**Why synchronize the SCHC Context of A and C?** 
-
+**Why synchronize the SCHC Context of A and C?** Synchronizing the SCHC Context
+  of Endpoint A and Endpoint C is desirable. This reduces the complexity of 
+  managing multiple SCHC Contexts at Endpoint B and eventually reduces the size 
+  of the Rules IDs, impacting the SCHC packet size.
+  
+  
 
 ## Core Components
 
