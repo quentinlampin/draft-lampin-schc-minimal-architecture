@@ -151,7 +151,11 @@ In the following, terms used in the terminology are assumed to be defined in the
  protocol, including header compression, fragmentation, and context management. 
 
 **Session**: A communication session between two SCHC Instances that 
- share a common context for compression and fragmentation operations.
+ share a common context for compression and fragmentation operations. Whenever 
+ the SCHC Context is updated, a new `Session` is established.
+
+**Domain**: A logical grouping of SCHC Instances that share a common set of 
+`Contexts` for compression and fragmentation operations. 
 
 **Dispatcher**: A logical component that routes packets to the appropriate SCHC 
  Instance based on defined admission rules. It can be integrated into the 
@@ -168,7 +172,7 @@ In the following, terms used in the terminology are assumed to be defined in the
  context synchronization and profile distribution.
 
 **Context Repository**: A logical component that stores and manages SCHC
- contexts and rules used by SCHC domains.
+ contexts used by SCHC domains.
 
 
 # Minimal Architecture Components
@@ -233,7 +237,7 @@ In this simplistic scenario, which is representative of some LPWAN deployments,
   `Instances`. This communication session is referred to as a SCHC `Session`.
 
 
-#### Discussions
+### Discussions
 
 **Why `Instance`?** Here we use the term SCHC `Instance` to refer to the SCHC 
  protocol routine that is running on each host. This is different from the SCHC
@@ -254,11 +258,64 @@ In this simplistic scenario, which is representative of some LPWAN deployments,
  extends this concept to all SCHC `Instances` that maintain a common context.
 
 
+## The three endpoints deployment scenario
+
+In this section, we consider a more complex deployment scenario where two or 
+ more endpoints communicate with the same SCHC Instance/Endpoint. This scenario 
+ is common in IoT deployments where multiple sensors or devices communicate with
+ a central gateway or server using SCHC.
+
+ 
+~~~~~~~~
++------------------+    +------------------+    +------------------+
+|     Host A       |    |      Host B      |    |     Host C       |
++------------------+    +------------------+    +------------------+
+|  Application A   |    |  Application B   |    |  Application A   |
++------------------+    +------------------+    +------------------+
+|       CoAP       |    |       CoAP       |    |       CoAP       |
++------------------+    +------------------+    +------------------+
+|       UDP        |    |       UDP        |    |       UDP        |
++------------------+    +------------------+    +------------------+
+|       IPv6       |    |       IPv6       |    |       IPv6       |
++------------------+    +------------------+    +------------------+
+|  SCHC Instance   |    |  SCHC Instance   |    |  SCHC Instance   |
++------------------+    +------------------+    +------------------+
+| LPWAN Link Layer |    | LPWAN Link Layer |    | LPWAN Link Layer |
++------------------+    +------------------+    +------------------+
+|  Physical Layer  |    |  Physical Layer  |    |  Physical Layer  |
++------------------+    +------------------+    +------------------+
+         |                    |       |                   |            
+         +--------------------+       +-------------------+            
+~~~~~~~~
+
+In this scenario, we have three hosts, Host A, Host B, and Host C, that 
+ communicate with each other using SCHC. Here, Host A and Host C are typically
+ sensors or devices that send data to Host B, which is a gateway or server that
+ collects and processes the data.
+ 
+ We further assume that Host A and C have very similar traffic patterns,
+ meaning that they send similar packets to Host B. This allows the SCHC 
+ `Instances` on Host A, B and C to share the same SCHC Context, which reduces 
+ the complexity of administration and management of this deployment. 
+ In the following, we refer to SCHC `Instances` that sare a common SCHC Context
+ as a SCHC `Domain`.
 
 
+### Requirements for the minimal architecture
 
+In this typical IoT deployment scenario, the requirements for the minimal 
+architecture are as follows:
 
+- The SCHC Context of Host A MUST be compatible with the SCHC Context of Host B
+  and Host C. This means that the SoR, parsers, and rule IDs are consistent 
+  between the three `Instances`.
+- The SCHC Context MUST be synchronized between the three `Instances`. This 
+  means that the SCHC Context MUST be updated on all three `Instances` whenever 
+  a new SCHC Session is established.
 
+### Discussions
+
+**Why synchronize the SCHC Context of A and C?** 
 
 
 ## Core Components
