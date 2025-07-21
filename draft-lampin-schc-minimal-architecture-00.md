@@ -298,29 +298,30 @@ In this scenario, we have three `Endpoints`, Endpoint A, Endpoint B,
  meaning that they send similar packets to Endpoint B. This allows the SCHC
  `Instances` on Host A, B and C to share the same SCHC Context, which reduces
  the complexity of administration and management of this deployment.
- In the following, we refer to SCHC `Instances` that share a common SCHC Context
- as a SCHC `Domain`.
+ In the following, we refer to `Instances` that share a SCHC `Context` as a 
+ `Domain`.
 
 ### Requirements for the minimal architecture
 
 In this typical IoT deployment scenario, the requirements for the minimal 
 architecture are as follows:
 
-- The SCHC Context of Endpoint A MUST be compatible with the SCHC Context of 
-  Endpoint B and Endpoint C. This means that the SoR, parsers, and rule IDs are
-  consistent between the three `Instances`.
-- The SCHC Context MUST be synchronized between the three `Instances`. This
+- The `Context` of all three `Endpoints` A MUST be compatible. This means that
+- the SoR, parsers, and rule IDs are consistent between the three `Instances`.
+- The `Context` MUST be synchronized between the three `Instances`. This
   means that an updated SCHC Session between all three `Instances` is 
   established whenever the `Context` is updated or modified.
-- The SCHC `Domain` MUST be able to manage the SCHC Contexts of all `Instances`
-  that belong to it. This includes context synchronization, rule lifecycle
-  management, and profile distribution.
+- The SCHC `Domain` MUST be able to manage the SCHC `Contexts` of all 
+  `Instances` that belong to it. This includes the Endpoints enrollment, 
+  provisioning of `Contexts` and synchronization. This role is assumed by a
+  logical component of the `Domain`, referred to as the `Domain Manager`.
+
 
 ### Discussions
 
-**Why synchronize the SCHC Context of A and C?** Synchronizing the SCHC Context
+**Why synchronize the `Contexts` of A and C?** Synchronizing the `Contexts`
   of Endpoint A and Endpoint C is desirable. This reduces the complexity of 
-  managing multiple SCHC Contexts at Endpoint B and eventually reduces the size 
+  managing multiple `Contexts` at Endpoint B and eventually reduces the size 
   of the Rules IDs, impacting the SCHC packet size.
   
 
@@ -391,7 +392,7 @@ A SCHC Instance MAY implement:
 
 ~~~~~~~~
 +---------------------------------------------------------------------+
-|                               Domain                                |
+|                               Session                               |
 +---------------------------------------------------------------------+
 |                                                                     |
 |      Endpoint A                                  Endpoint B         |
@@ -415,10 +416,40 @@ The SCHC `Session` is a communication session between two or more `Instances`
  that share a common `Context`, i.e. they are part of the same `Domain`. It is 
  established whenever the `Context` is updated or modified.
 
-### SCHC Domain
+### SCHC Domain & Domain Manager
 
 The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC 
- Contexts of all `Instances` that belong to it. 
+ Contexts of all `Instances` that belong to it. The `Domain Manager` is the
+ component responsible for this management. It handles Endpoints Enrollment, 
+ and `Context` synchronization.
+
+~~~~~~~~
++-------------------------------------------------------------------+
+|                             SCHC Domain                           |
++-------------------------------------------------------------------+
+|                                                                   |
+|                   +----------------------------+                  |
+|                   |       Domain Manager       |                  |
+|                   +----------------------------+                  |
+|                   |                            |                  |
+|                   | +----------+  +----------+ |                  |
+|                   | | Endpoint |  |  Context | |                  |
+|           +-------+>|  Manager |  |  Manager | |                  |
+|           |       | +----------+  +----------+ |                  |
+|           |       +--------------------+-------+                  |
+|  Register |                            |                          |
+|           |   +------------------------+                          |
+|           |   |  synchronize Context                              |
+|           v   v                                                   |
+|  +-----------------+   +------------------+   +----------------+  |
+|  |    Endpoint     |   |    Endpoint B    |   |   Endpoint ... |  |
+|  +-----------------+   +------------------+   +----------------+  |
+|                                                                   |
+|                                                                   |
++-------------------------------------------------------------------+
+
+
+
 
 #### Header Compression and Decompression (C/D) engine
 
