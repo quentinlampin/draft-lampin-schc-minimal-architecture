@@ -150,6 +150,9 @@ In the following, terms used in the terminology are assumed to be defined in the
 **Instance**: A logical component of an Endpoint that implements the SCHC 
  protocol, including header compression, fragmentation, and context management. 
 
+**Session**: A communication session between two SCHC Instances that 
+ share a common context for compression and fragmentation operations.
+
 **Dispatcher**: A logical component that routes packets to the appropriate SCHC 
  Instance based on defined admission rules. It can be integrated into the 
  network stack or implemented as a separate component.
@@ -211,12 +214,26 @@ In this scenario,
 - The SCHC protocol is used to compress the CoAP, UDP, and IPv6
   headers before sending the packets over the LPWAN link layer. 
 - The SCHC protocol is implemented as a single SCHC `Instance` on each host.
-- The SCHC Instance is hardwired into the protocol stack of each host, 
+- The SCHC `Instance` is hardwired into the protocol stack of each host, 
   meaning that it is not dynamically loaded or unloaded.
 - All of the traffic is compressed and decompressed using those SCHC Instances.
-- The packets feature little variations in their headers, requiring little to no
-  Compression Rules updates.
 
+### Requirements for the minimal architecture
+
+In this simplistic scenario, which is representative of some LPWAN deployments,
+ the requirements for the minimal architecture are as follows:
+
+- The Set Of Rules (SoR) of Host A MUST be compatible with the SoR of
+  Host B. Such compatitibility requires that rules IDs and Rule Descriptors are
+  consistent between the two `Instances`. Parsers of both `Instances` MUST 
+  be compatible, meaning that they MUST delineate the same header fields in the
+  same order and with the same semantics. 
+- Whenever Host A compresses a packet, it MUST use the same SCHC Context as Host 
+  B. This means that the SCHC Context MUST be synchronized between the two 
+  `Instances`. This communication session is referred to as a SCHC `Session`.
+
+
+#### Discussions
 
 **Why `Instance`?** Here we use the term SCHC `Instance` to refer to the SCHC 
  protocol routine that is running on each host. This is different from the SCHC
@@ -227,20 +244,18 @@ In this scenario,
  refer to a specific realization of a class in object-oriented programming, and 
  in this case, the SCHC Instance is a specific realization of the SCHC protocol 
  that is running on each host.
+
+**Session vs Instance**: In this document, we use the term `Session` to refer to
+ a communication session between two (or more) SCHC Instances that are 
+ communicating with each other using SCHC, using the same `Context`. 
  
-### Requirements for the minimal architecture
+ The rationale for this is that the term `Session` is often used to refer to a 
+ specific communication session between two endpoints and this definition 
+ extends this concept to all SCHC `Instances` that maintain a common context.
 
-In this simplistic scenario, which is representative of some LPWAN deployments,
- the requirements for the minimal architecture are as follows:
 
- - The Set of Rules (SoR) used for compression and decompression is static and
-   does not change over time. It can be hardcode in the SCHC Instance or
-   configured at startup. This means that the SCHC Instance does not need to
-   expose an interface for updating the SoR dynamically.
- - However, the Set Of Rules (SoR) of Host A MUST be compatible with the SoR of
-   Host B. Such compatitibility requires that rules IDs and Rule Descriptors are
-   consistent between the two hosts.
-   
+
+
 
 
 
@@ -552,7 +567,7 @@ When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS
  admission rules in the profile.
 
 
-### Context Management
+### Context Management {sec-context-management}
 
 Context management is responsible for maintaining the shared state between
  SCHC entities. This includes:
