@@ -383,9 +383,9 @@ Then comes the spring, and the temperature and thermostat setpoints change.
   |
   | 1. Submission of a new Context (v2)
   |
-  |   +----------------+
-  +-->| Domain Manager |
-      +----------------+
+  |       +----------------+  Context v2   +--------------------+
+  +------>| Domain Manager | <---------->  | Context Repository |
+          +----------------+    stored     +--------------------+
                    |
                    |
                    |
@@ -418,8 +418,11 @@ Answering those specific questions is critical for the proper operation of SCHC
 
 - A `Context Repository` that is responsible for storing the `Contexts` of
   the domain. In case of disagreement between `Instances`, the `Context 
-  Repository` is used to resolve the disagreement.
-
+  Repository` is used to resolve the disagreement. Having one identified
+  source of truth for the `Contexts` helps to maintain consistency across
+  the domain. This is also useful when (new) nodes join the domain later, as
+  the `Context Repository` can provide the necessary `Context` information
+  to new or existing `Instances`.
 
 ## Core Components Illustrated
 
