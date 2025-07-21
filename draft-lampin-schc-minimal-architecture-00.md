@@ -2,7 +2,7 @@
 title: SCHC Minimal Architecture
 # abbrev: SCHC-Min-Arch
 docname: draft-lampin-schc-minimal-architecture-00
-date: 2025-07-16
+date: 2025-07-21
 
 
 # stand_alone: true
@@ -148,11 +148,15 @@ In the following, terms used in the terminology are assumed to be defined in the
  and optionally fragmenting and reassembling packets. 
 
 **Instance**: A logical component of an Endpoint that implements the SCHC 
- protocol, including header compression, fragmentation, and context management. 
+ protocol, including header compression, fragmentation, and context management.
+
+**Context**: A set of rules and parameters that define how SCHC operations are 
+ performed by `Instances` that implement this `Context`. It includes the Set of 
+ Rules (SoR) and the parser ID.
 
 **Session**: A communication session between two SCHC Instances that 
  share a common context for compression and fragmentation operations. Whenever 
- the SCHC Context is updated, a new `Session` is established.
+ the SCHC `Context` is updated, a new or updated `Session` is established.
 
 **Domain**: A logical grouping of SCHC Instances that share a common set of 
 `Contexts` for compression and fragmentation operations. 
@@ -164,9 +168,6 @@ In the following, terms used in the terminology are assumed to be defined in the
 **Profile**: A set of configurations that define how SCHC operations are 
  performed within a specific Instance. It includes parameters for the different
  SCHC components.
-
-**Domain**: A network domain where SCHC instances share a common context for 
- compression and fragmentation operations.
 
 **Domain Manager**: A logical component that manages the SCHC domain, including 
  context synchronization and profile distribution.
@@ -211,16 +212,16 @@ This section considers a simple point-to-point deployment scenario
 In this scenario, 
 
 
-- Both Endpoint A and Endpoint B implement the SCHC protocol for header compression and 
-  decompression. 
-- Both endpoints feature a single application and all traffic is sent and received 
-  using the CoAP protocol over UDP over IPv6. 
+- Both Endpoint A and Endpoint B implement the SCHC protocol for header 
+  compression and decompression. 
+- Both endpoints feature a single application and all traffic is sent and 
+  received using the CoAP protocol over UDP over IPv6. 
 - The SCHC protocol is used to compress the CoAP, UDP, and IPv6
   headers before sending the packets over the LPWAN link layer. 
 - The SCHC protocol is implemented as a single SCHC `Instance` on each endpoint.
 - The SCHC `Instance` is hardwired into the protocol stack of each endpoint, 
   meaning that it is not dynamically loaded or unloaded.
-- All of the traffic is compressed and decompressed using those SCHC Instances.
+- All of the traffic is compressed and decompressed using those `Instances`.
 
 ### Requirements for the minimal architecture
 
@@ -232,14 +233,14 @@ In this simplistic scenario, which is representative of some LPWAN deployments,
   consistent between the two `Instances`. Parsers of both `Instances` MUST 
   be compatible, meaning that they MUST delineate the same header fields in the
   same order and with the same semantics. 
-- Whenever Host A compresses a packet, it MUST use the same SCHC Context as Host 
-  B. This means that the SCHC Context MUST be synchronized between the two 
-  `Instances`. This communication session is referred to as a SCHC `Session`.
+- Whenever Host A compresses a packet, it MUST use the same `Context` as Host 
+  B. This means that the `Context` MUST be synchronized between the two 
+  `Instances`. This communication session is referred to as a `Session`.
 
 
 ### Discussions
 
-**Why `Instance`?** Here we use the term SCHC `Instance` to refer to the SCHC 
+**Why `Instance`?** Here we use the term `Instance` to refer to the SCHC 
  protocol routine that is running on each endpoint. This is different from the SCHC
  Instance defined in {{DRAFT-ARCH}}, which refers to a pair of SCHC endpoints
  that communicate through SCHC. 
@@ -288,18 +289,17 @@ In this section, we consider a more complex deployment scenario where two or
          +--------------------+       +-------------------+            
 ~~~~~~~~
 
-In this scenario, we have three endpoints, Endpoint A, Endpoint B, 
+In this scenario, we have three `Endpoints`, Endpoint A, Endpoint B, 
  and Endpoint C, that communicate with each other using SCHC. Here, Endpoint A 
  and Endpoint C are typically sensors or devices that send data to Endpoint B, 
  which is a gateway or server that collects and processes the data.
  
- We further assume that Endpoints A and C have very similar traffic patterns,
+ We further assume that `Endpoints` A and C have very similar traffic patterns,
  meaning that they send similar packets to Endpoint B. This allows the SCHC
  `Instances` on Host A, B and C to share the same SCHC Context, which reduces
  the complexity of administration and management of this deployment.
  In the following, we refer to SCHC `Instances` that share a common SCHC Context
  as a SCHC `Domain`.
-
 
 ### Requirements for the minimal architecture
 
@@ -312,6 +312,9 @@ architecture are as follows:
 - The SCHC Context MUST be synchronized between the three `Instances`. This
   means that an updated SCHC Session between all three `Instances` is 
   established whenever the `Context` is updated or modified.
+- The SCHC `Domain` MUST be able to manage the SCHC Contexts of all `Instances`
+  that belong to it. This includes context synchronization, rule lifecycle
+  management, and profile distribution.
 
 ### Discussions
 
@@ -320,9 +323,9 @@ architecture are as follows:
   managing multiple SCHC Contexts at Endpoint B and eventually reduces the size 
   of the Rules IDs, impacting the SCHC packet size.
   
-  
 
-## Core Components
+
+## Core Components Illustrated
 
 ### SCHC Instance
 
@@ -345,10 +348,10 @@ figure:
 |  | - decompress(buffer) |    | - reassemble(fragments) |    |
 |  +----------------------+    +-------------------------+    |
 |                                                             |
+|
 |  +-----------------------------------------------------+    |
 |  |                   Configuration                     |    |
 |  +-----------------------------------------------------+    |
-|  |                                                     |    |
 |  |   +-------------------+    +-------------------+    |    |
 |  |   |      Profile      |    |     Context       |    |    |
 |  |   |                   |    |                   |    |    |
@@ -382,6 +385,40 @@ A SCHC Instance MAY implement:
 * Fragmentation and Reassembly (F/R) functionality
 * Dynamic context update mechanisms
 * Performance monitoring and reporting
+
+
+### SCHC Session
+
+~~~~~~~~
++---------------------------------------------------------------------+
+|                               Domain                                |
++---------------------------------------------------------------------+
+|                                                                     |
+|      Endpoint A                                  Endpoint B         |
+|   +------------------+                      +------------------+    |
+|   |  SCHC Instance   | <---           ----> |  SCHC Instance   |    |
+|   +------------------+     \         /      +------------------+    |
+|                             \       /                               |
+|                              Session                                |
+|                             /       \                               |
+|   +------------------+     /         \      +------------------+    |
+|   |  SCHC Instance   | <---           --->  |  SCHC Instance   |    |
+|   +------------------+                      +------------------+    |
+|      Endpoint C                                  Endpoint D         |
+|                                                                     |
++---------------------------------------------------------------------+
+
+~~~~~~~~
+
+
+The SCHC `Session` is a communication session between two or more `Instances` 
+ that share a common `Context`, i.e. they are part of the same `Domain`. It is 
+ established whenever the `Context` is updated or modified.
+
+### SCHC Domain
+
+The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC 
+ Contexts of all `Instances` that belong to it. 
 
 #### Header Compression and Decompression (C/D) engine
 
