@@ -353,15 +353,61 @@ In this section, we consider yet another more complex deployment scenario where
  tailored to the specifics of the temperatures recorded during winter,
  and the thermostat setpoints used during this season.
 
+~~~~~~~
+      +----------------+
+      | Domain Manager |
+      +----------------+
+              ^    |
+1. Endpoints  |    |
+  registered  |    |
+              |    |   2. Context v1 deployed for winter
+              |    +-----------------+-----------------+
+              |    |                 |                 |
+              |    |                 |                 |
+              |    v                 v                 v 
+            +--------------+  +--------------+  +--------------+ 
+            |  Endpoint A  |  |  Endpoint B  |  |  Endpoint C  |
+            +--------------+  +--------------+  +--------------+
+~~~~~~~
+
 Then comes the spring, and the temperature and thermostat setpoints change. 
- The `Domain Manager` is then responsible for updating the `Context` of all 
+ The `Domain Manager` is responsible for updating the `Context` of all 
  `Instances` that belong to the domain, i.e. A, B and C. This update is done
  dynamically, meaning that the `Context` is updated without interrupting the 
  communication between the `Instances`.
 
- 
+~~~~~~~
++--------------------+
+| Application Server |
++--------------------+
+  |
+  | 1. Submission of a new Context (v2)
+  |
+  |   +----------------+
+  +-->| Domain Manager |
+      +----------------+
+                   |
+                   |
+                   |
+                   |        2. Context v2 deployed
+                   +-----------------+-----------------+
+                   |                 |                 |
+                   |                 |                 |
+                   v                 v                 v 
+            +--------------+  +--------------+  +--------------+ 
+            |  Endpoint A  |  |  Endpoint B  |  |  Endpoint C  |
+            +--------------+  +--------------+  +--------------+
+~~~~~~~
 
+This scenario highlights the need for a dynamic context update mechanism
+ that allows the `Domain Manager` to update the `Context` of all `Instances`
+ that belong to the `Domain`. 
  
+ This raises a number of questions, such as:
+- How to ensure that all `Instances` are updated with the new `Context`?
+- How to process packets sent before the `Context` update but received after?
+
+
 
 ## Core Components Illustrated
 
