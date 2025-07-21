@@ -325,6 +325,20 @@ architecture are as follows:
   of the Rules IDs, impacting the SCHC packet size.
   
 
+## The dynamic traffic scenario
+
+In this section, we consider a more complex deployment scenario where multiple 
+ `Endpoints` communicate with each other using SCHC, but the traffic patterns of 
+ these `Endpoints` are dynamic and can change over time. This scenario typically
+ occurs in Smart Buildings applications, where different configurations are 
+ deployed based on the current season, occupancy, etc. For example, thermostats
+ setpoints are set differently in winter and summer.
+
+ In this scenario, we have three `Endpoints` A, B and C. A, B feature a
+ temperature and thermostat functionality, while C is a server that collects and
+ processes the data from A and B.
+
+ 
 
 ## Core Components Illustrated
 
@@ -349,7 +363,7 @@ figure:
 |  | - decompress(buffer) |    | - reassemble(fragments) |    |
 |  +----------------------+    +-------------------------+    |
 |                                                             |
-|
+|                                                             |
 |  +-----------------------------------------------------+    |
 |  |                   Configuration                     |    |
 |  +-----------------------------------------------------+    |
@@ -387,70 +401,6 @@ A SCHC Instance MAY implement:
 * Dynamic context update mechanisms
 * Performance monitoring and reporting
 
-
-### SCHC Session
-
-~~~~~~~~
-+---------------------------------------------------------------------+
-|                               Session                               |
-+---------------------------------------------------------------------+
-|                                                                     |
-|      Endpoint A                                  Endpoint B         |
-|   +------------------+                      +------------------+    |
-|   |  SCHC Instance   | <---           ----> |  SCHC Instance   |    |
-|   +------------------+     \         /      +------------------+    |
-|                             \       /                               |
-|                              Session                                |
-|                             /       \                               |
-|   +------------------+     /         \      +------------------+    |
-|   |  SCHC Instance   | <---           --->  |  SCHC Instance   |    |
-|   +------------------+                      +------------------+    |
-|      Endpoint C                                  Endpoint D         |
-|                                                                     |
-+---------------------------------------------------------------------+
-
-~~~~~~~~
-
-
-The SCHC `Session` is a communication session between two or more `Instances` 
- that share a common `Context`, i.e. they are part of the same `Domain`. It is 
- established whenever the `Context` is updated or modified.
-
-### SCHC Domain & Domain Manager
-
-The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC 
- Contexts of all `Instances` that belong to it. The `Domain Manager` is the
- component responsible for this management. It handles Endpoints Enrollment, 
- and `Context` synchronization.
-
-~~~~~~~~
-+-------------------------------------------------------------------+
-|                             SCHC Domain                           |
-+-------------------------------------------------------------------+
-|                                                                   |
-|                   +----------------------------+                  |
-|                   |       Domain Manager       |                  |
-|                   +----------------------------+                  |
-|                   |                            |                  |
-|                   | +----------+  +----------+ |                  |
-|                   | | Endpoint |  |  Context | |                  |
-|           +-------+>|  Manager |  |  Manager | |                  |
-|           |       | +----------+  +----------+ |                  |
-|           |       +--------------------+-------+                  |
-|  Register |                            |                          |
-|           |   +------------------------+                          |
-|           |   |  synchronize Context                              |
-|           v   v                                                   |
-|  +-----------------+   +------------------+   +----------------+  |
-|  |    Endpoint     |   |    Endpoint B    |   |   Endpoint ... |  |
-|  +-----------------+   +------------------+   +----------------+  |
-|                                                                   |
-|                                                                   |
-+-------------------------------------------------------------------+
-
-
-
-
 #### Header Compression and Decompression (C/D) engine
 
 This component is responsible for compressing and decompressing headers
@@ -484,6 +434,69 @@ This component is responsible for fragmenting larger packets into smaller
  fragments and reassembling them at the receiving end. It is optional in
  the minimal architecture but recommended for scenarios where packet sizes
  exceed the maximum transmission unit (MTU) of the underlying network.
+
+
+### SCHC Session
+
+~~~~~~~~
++--------------------------------------------------------------------+
+|                               Session                              |
++--------------------------------------------------------------------+
+|                                                                    |
+|      Endpoint A                                  Endpoint B        |
+|   +------------------+                      +------------------+   |
+|   |  SCHC Instance   | <---           ----> |  SCHC Instance   |   |
+|   +------------------+     \         /      +------------------+   |
+|                             \       /                              |
+|                              Session                               |
+|                             /       \                              |
+|   +------------------+     /         \      +------------------+   |
+|   |  SCHC Instance   | <---           --->  |  SCHC Instance   |   |
+|   +------------------+                      +------------------+   |
+|      Endpoint C                                  Endpoint D        |
+|                                                                    |
++--------------------------------------------------------------------+
+
+~~~~~~~~
+
+
+The SCHC `Session` is a communication session between two or more `Instances` 
+ that share a common `Context`, i.e. they are part of the same `Domain`. It is 
+ established whenever the `Context` is updated or modified.
+
+### SCHC Domain & Domain Manager
+
+The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC 
+ Contexts of all `Instances` that belong to it. The `Domain Manager` is the
+ component responsible for this management. It handles Endpoints Enrollment, 
+ and `Context` synchronization.
+
+~~~~~~~~
++-------------------------------------------------------------------+
+|                             SCHC Domain                           |
++-------------------------------------------------------------------+
+|                                                                   |
+|                   +----------------------------+                  |
+|                   |       Domain Manager       |                  |
+|                   +----------------------------+                  |
+|                   |                            |                  |
+|                   | +----------+  +----------+ |                  |
+|                   | | Endpoint |  |  Context | |                  |
+|           +-------+>|  Manager |  |  Manager | |                  |
+|           |       | +----------+  +----------+ |                  |
+|           |       +--------------------+-------+                  |
+|  Register |                            |                          |
+|  Endpoint |   +------------------------+                          |
+|           |   |  synchronize Context                              |
+|           v   v                                                   |
+|  +-----------------+   +------------------+   +----------------+  |
+|  |    Endpoint     |   |    Endpoint B    |   |   Endpoint ... |  |
+|  +-----------------+   +------------------+   +----------------+  |
+|                                                                   |
+|                                                                   |
++-------------------------------------------------------------------+
+
+~~~~~~~~
 
 ### Dispatcher
 
