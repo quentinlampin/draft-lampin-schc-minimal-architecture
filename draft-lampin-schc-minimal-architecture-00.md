@@ -323,20 +323,43 @@ architecture are as follows:
   of Endpoint A and Endpoint C is desirable. This reduces the complexity of 
   managing multiple `Contexts` at Endpoint B and eventually reduces the size 
   of the Rules IDs, impacting the SCHC packet size.
-  
+
+**Domain Manager, why introduce a new function?** In a first approach, the 
+  `Domain Manager` could be implemented as a component of the `Instance` that is
+  running on an `Endpoint`, here B. However, this would require distinguishing 
+  between different types of `Instances`: those capable of managing other 
+  instances from those that are not, those that are in charge of managing others
+  from those that are not. By separating the `Domain Manager` from the 
+  `Instance`, we allow for a more flexible and modular architecture that can be 
+  adapted to different deployment scenarios.
 
 ## The dynamic traffic scenario
 
-In this section, we consider a more complex deployment scenario where multiple 
- `Endpoints` communicate with each other using SCHC, but the traffic patterns of 
- these `Endpoints` are dynamic and can change over time. This scenario typically
- occurs in Smart Buildings applications, where different configurations are 
- deployed based on the current season, occupancy, etc. For example, thermostats
- setpoints are set differently in winter and summer.
+In this section, we consider yet another more complex deployment scenario where 
+ multiple `Endpoints` communicate with each other using SCHC, but the traffic 
+ patterns of these `Endpoints` are dynamic and can change over time. This 
+ scenario typically occurs in Smart Buildings applications, where different 
+ configurations are deployed based on the current season, occupancy, etc. 
+ For example, thermostats setpoints are set differently in winter and summer.
 
  In this scenario, we have three `Endpoints` A, B and C. A, B feature a
  temperature and thermostat functionality, while C is a server that collects and
  processes the data from A and B.
+
+ We further assume that the Endpoints A, B and C are first registered with the
+ `Domain Manager` of domain which they are part of, and that they are
+ provisioned with an initial `Context`. This `Context` is used to compress
+ the temperature and thermostat data sent by A and B to C. The `Context` is
+ tailored to the specifics of the temperatures recorded during winter,
+ and the thermostat setpoints used during this season.
+
+Then comes the spring, and the temperature and thermostat setpoints change. 
+ The `Domain Manager` is then responsible for updating the `Context` of all 
+ `Instances` that belong to the domain, i.e. A, B and C. This update is done
+ dynamically, meaning that the `Context` is updated without interrupting the 
+ communication between the `Instances`.
+
+ 
 
  
 
