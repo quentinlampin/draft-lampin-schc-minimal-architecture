@@ -223,8 +223,6 @@ In this scenario,
   meaning that it is not dynamically loaded or unloaded.
 - All of the traffic is compressed and decompressed using those `Instances`.
 
-### Requirements for the minimal architecture
-
 In this simplistic scenario, which is representative of some LPWAN deployments,
  the requirements for the minimal architecture are as follows:
 
@@ -301,7 +299,6 @@ In this scenario, we have three `Endpoints`, Endpoint A, Endpoint B,
  In the following, we refer to `Instances` that share a SCHC `Context` as a 
  `Domain`.
 
-### Requirements for the minimal architecture
 
 In this typical IoT deployment scenario, the requirements for the minimal 
 architecture are as follows:
@@ -347,7 +344,7 @@ In this section, we consider yet another more complex deployment scenario where
  processes the data from A and B.
 
  We further assume that the Endpoints A, B and C are first registered with the
- `Domain Manager` of domain which they are part of, and that they are
+ `Domain Manager` of the domain which they are part of, and that they are
  provisioned with an initial `Context`. This `Context` is used to compress
  the temperature and thermostat data sent by A and B to C. The `Context` is
  tailored to the specifics of the temperatures recorded during winter,
@@ -374,7 +371,7 @@ Then comes the spring, and the temperature and thermostat setpoints change.
  The `Domain Manager` is responsible for updating the `Context` of all 
  `Instances` that belong to the domain, i.e. A, B and C. This update is done
  dynamically, meaning that the `Context` is updated without interrupting the 
- communication between the `Instances`.
+ communication between the `Endpoints`.
 
 ~~~~~~~
 +--------------------+
@@ -423,6 +420,71 @@ Answering those specific questions is critical for the proper operation of SCHC
   the domain. This is also useful when (new) nodes join the domain later, as
   the `Context Repository` can provide the necessary `Context` information
   to new or existing `Instances`.
+- A mechanism for versioning `Contexts`, allowing the `Domain Manager` to
+  manage multiple versions of a `Context` and facilitate rollbacks if needed.
+- A mechanism for notifying `Endpoints` of `Context` updates, ensuring that all
+  `Endpoints` are aware of the latest `Context` version and can adapt their
+  behavior accordingly.
+
+## Multiple SCHC Instances in the same Endpoint
+
+In this scenario, a single Endpoint that hosts multiple SCHC Instances is 
+ considered. This scenario involves each Instance being configured with
+ different `Contexts`. This can be useful for supporting multiple applications
+ or services with distinct traffic patterns. One such use-case arises when
+ a single Endpoint needs to handle different types of traffic, potentially sent
+ and received on different network interfaces, each requiring
+ its own SCHC Instance with tailored compression and fragmentation settings.
+
+~~~~~~~~
+
+            Endpoint A                          Endpoint B         
++------------------------------+     +------------------------------+   
+|    App. 1     |   App. 2     |     |    App. 1     |   App. 2     |
++------------------------------+     +------------------------------+   
+|     CoAP      |    HTTP      |     |     CoAP      |    HTTP      |   
++------------------------------+     +------------------------------+   
+|      UDP      |   UDP/QUIC   |     |      UDP      |   UDP/QUIC   |   
++------------------------------+     +------------------------------+   
+|             IPv6             |     |             IPv6             |   
++------------------------------+     +------------------------------+   
+|     SCHC      |     SCHC     |     |     SCHC      |     SCHC     |
+|  Instance A1  | Instance A2  |     |  Instance B1  | Instance B2  |
++------------------------------+     +------------------------------+   
+|           Link Layer         |     |           Link Layer         |   
++------------------------------+     +------------------------------+   
+|         Physical Layer       |     |         Physical Layer       |   
++------------------------------+     +------------------------------+   
+                |                                     |
+                +-------------------------------------+
+~~~~~~~~
+
+In the above example, two `Endpoints`, A and B, each host two SCHC `Instances`.
+ `Endpoint` A hosts `Instance` A1 and `Instance` A2, while `Endpoint` B hosts 
+ `Instance` B1 and `Instance` B2. `Instance` A1 and `Instance` B1 are configured
+  to handle CoAP traffic and share a common `Context` C1 while `Instance` A2 and
+  `Instance` B2 are configured to handle HTTP traffic and share a common 
+  `Context` C2.
+
+This new scenario introduces the following challenges:
+
+- **Datagram Dispatch**: The Endpoint must be able to route packets to the 
+  appropriate SCHC Instance based on the protocol or application in use. This 
+  requires an additional functional unit, the `Dispatcher`, that can identify 
+  and dispatch packets to the correct SCHC Instance for compression and 
+  fragmentation. Conversely, the Dispatcher must also be able to route inbound 
+  compressed and fragmented packets to the correct SCHC Instance for 
+  decompression and reassembly.
+
+  In the above example, uncompressed CoAP/UDP packets must be dispatched to 
+  `Instances` A1 and B1, while uncompressed HTTP/QUIC packets must be dispatched 
+  to `Instances` A2 and B2. Additionally, compressed CoAP/UDP packets must be 
+  dispatched to `Instances` A1 and B1, while compressed HTTP/QUIC packets must 
+  be dispatched to `Instances` A2 and B2 for decompression.
+
+- **Instance Identification**: In addition to the need for a `Dispatch`
+  mechanism, each SCHC `Instance` must be uniquely identifiable, allowing the 
+  Endpoint to dispatch packets to the correct Instance.
 
 ## Core Components Illustrated
 
