@@ -428,13 +428,13 @@ Answering those specific questions is critical for the proper operation of SCHC
 
 ## Multiple SCHC Instances in the same Endpoint
 
-In this scenario, a single Endpoint that hosts multiple SCHC Instances is 
- considered. This scenario involves each Instance being configured with
+In this scenario, a single `Endpoint` that hosts multiple `Instances` is 
+ considered. This scenario involves each `Instance` being configured with
  different `Contexts`. This can be useful for supporting multiple applications
  or services with distinct traffic patterns. One such use-case arises when
- a single Endpoint needs to handle different types of traffic, potentially sent
- and received on different network interfaces, each requiring
- its own SCHC Instance with tailored compression and fragmentation settings.
+ a single `Endpoint` needs to handle different types of traffic, potentially
+ sent and received on different network interfaces, each requiring
+ its own `Instance` with tailored compression and fragmentation settings.
 
 ~~~~~~~~
 
@@ -468,23 +468,47 @@ In the above example, two `Endpoints`, A and B, each host two SCHC `Instances`.
 
 This new scenario introduces the following challenges:
 
-- **Datagram Dispatch**: The Endpoint must be able to route packets to the 
-  appropriate SCHC Instance based on the protocol or application in use. This 
+- **Datagram Dispatch**: The `Endpoint` must be able to dispatch packets to the 
+  appropriate `Instance` based on the protocol or application in use. This 
   requires an additional functional unit, the `Dispatcher`, that can identify 
-  and dispatch packets to the correct SCHC Instance for compression and 
-  fragmentation. Conversely, the Dispatcher must also be able to route inbound 
-  compressed and fragmented packets to the correct SCHC Instance for 
-  decompression and reassembly.
+  and dispatch packets to the correct `Instance` for compression and 
+  fragmentation. Conversely, the `Dispatcher` must also be able to route inbound 
+  compressed and fragmented packets to the correct `Instance` for decompression 
+  and reassembly.
 
   In the above example, uncompressed CoAP/UDP packets must be dispatched to 
   `Instances` A1 and B1, while uncompressed HTTP/QUIC packets must be dispatched 
   to `Instances` A2 and B2. Additionally, compressed CoAP/UDP packets must be 
   dispatched to `Instances` A1 and B1, while compressed HTTP/QUIC packets must 
-  be dispatched to `Instances` A2 and B2 for decompression.
+  be dispatched to `Instances` A2 and B2 for decompression. Solutions to this
+  problem are discussed in section  {{sec-dispatcher}}.
 
-- **Instance Identification**: In addition to the need for a `Dispatch`
-  mechanism, each SCHC `Instance` must be uniquely identifiable, allowing the 
-  Endpoint to dispatch packets to the correct Instance.
+- **Instance/Context Identification**: In addition to the need for a `Dispatch`
+  mechanism, each `Instance` or `Context` must be uniquely identifiable,
+  allowing the `Domain Manager` to update the `Context` of a specific
+  `Instance`.
+
+## Heterogeneous Endpoints
+
+This additional scenario introduces heterogeneous `Endpoints` that may have 
+ different capabilities, i.e. memory, processing power, and architecture, e.g.
+ naming conventions for network interfaces. In this scenario, the `Context` 
+ which contains the Set of Rules (SoR) and the parser ID, i.e. the configuration
+ which is shared by all `Instances` of a `Domain`, cannot be assumed to provide
+ the configuration that is specific to each `Endpoint`. For example, one cannot 
+ assume that the `Context` provides the appropriate network interface ID for the
+ Ethernet card of a Linux host, or the appropriate network interface name for a
+ Windows host.
+
+In this scenario, the `Profile` is introduced as a configuration component that
+interfaces SCHC functional components to the specifics of each `Endpoint`. The 
+`Profile` itself is `Endpoint` specific so its actual content is out of scope of
+this document. However, the `Profile` SHALL include the following:
+- The configuration of the `Dispatcher`, i.e. the admission rules for 
+  compression and decompression.
+- The rule matching policy, i.e. the policy used to select the appropriate
+  compression or decompression rule based on the SCHC packet and the `Context`.
+
 
 ## Core Components Illustrated
 
@@ -644,15 +668,15 @@ The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC
 
 ~~~~~~~~
 
-### Dispatcher
+### Dispatcher {#sec-dispatcher}
 
 The Dispatcher is responsible for delivering compressed packets to the
- correct SCHC Instance. It ensures that the compressed packets are sent
+ correct SCHC `Instance`. It ensures that the compressed packets are sent
  to the appropriate destination and that the decompressed packets are
  delivered to the correct application or protocol routine.
 
 The Dispatcher is a key component that enables the coexistence of multiple
- SCHC Instances on the same network host, allowing different protocols or
+ SCHC `Instances` on the same network host, allowing different protocols or
  applications to use SCHC compression and decompression mechanisms. It also
  allows regular traffic to coexist with SCHC-compressed traffic.
 
@@ -863,8 +887,6 @@ Context management is responsible for maintaining the shared state between
 * Context synchronization between entities
 * Rule lifecycle management
 * Profile distribution and updates
-
-## Optional Components
 
 ### Context Repository
 
