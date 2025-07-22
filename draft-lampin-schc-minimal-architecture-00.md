@@ -879,7 +879,7 @@ When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS
  admission rules in the profile.
 
 
-### Context Management {sec-context-management}
+### Context Management {#sec-context-management}
 
 Context management is responsible for maintaining the shared state between
  SCHC entities. This includes:
@@ -888,13 +888,13 @@ Context management is responsible for maintaining the shared state between
 * Rule lifecycle management
 * Profile distribution and updates
 
-### Context Repository
+### Context Repository {#sec-context-repository}
 
 A Context Repository provides centralized storage and management of SCHC
  contexts and profiles. While not mandatory for minimal deployments, it
  becomes essential for larger deployments requiring centralized management.
 
-### Management Interface
+### Management Interface {#sec-management-interface}
 
 A Management Interface provides operational control and monitoring
  capabilities for SCHC deployments. This may include:
@@ -902,31 +902,6 @@ A Management Interface provides operational control and monitoring
 * Configuration management
 * Performance monitoring
 * Troubleshooting tools
-
-# Deployment Patterns
-
-## Point-to-Point Deployment
-
-The simplest SCHC deployment involves two SCHC entities communicating
- directly with each other. This pattern is suitable for:
-
-* Simple device-to-server communications
-* Gateway-to-cloud deployments
-* Testing and development environments
-
-## Hub-and-Spoke Deployment
-
-In this pattern, multiple SCHC entities connect to a central hub entity.
- This is common in:
-
-* IoT deployments with multiple sensors
-* Network gateway scenarios
-* Hierarchical network topologies
-
-## Distributed Deployment
-
-For larger deployments, SCHC entities may be distributed across multiple
-network domains with centralized context management.
 
 # Security Considerations
 
