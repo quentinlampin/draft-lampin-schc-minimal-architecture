@@ -563,6 +563,93 @@ In both scenarios, a management protocol is required to enable the retrieval
 This section provides an overview of the SCHC Core components their interactions
 and key functionalities and interfaces.
 
+### Endpoint
+
+An `Endpoint` is a network host capable of compressing and decompressing headers
+ and optionally fragmenting and reassembling packets. It implements the SCHC 
+ protocol as defined in {{RFC8724}}. An `Endpoint` can host multiple SCHC 
+ `Instances`, each with its own context and profile.
+
+~~~~~~~~
+
+                      Endpoint 
++-------------------------------------------------------------------+
+|                                                                   |
+|                                              Domain D1            |
+|                   +--------------+     +--------------------+     | 
+|               +---| Instance I1  |-----|- Context/Profile 1 |    +-+ 
+|               |   +--------------+    +|- Context/Profile 2 |    | | i
+|               |   +--------------+   / |         ...        |   d| | n
+|            +--|---| Instance I2  |__/  +------------+-------+   o| | t
+|            |  |   +--------------+              ... |           m| | e
+|            |  |         ...                  Domain Dn          a| | r
+|            |  |   +--------------+     +---------------------+  i| | f
+|            |  |   | Instance Ij  |-----|- Context/Profile j  |  n| | a
+|            |  |   +--------------+ ... |         ...         |   | | c
+|            |  |   +--------------+   --|- Context/Profile k  |   | | e
+|         +--|--|---| Instance Ik  |__/  +------+--------------+   +-+ 
+|         |  |  |   +--------------+            | | | |             | 
+|         |  |  |            Dispatcher         | |   |             |
+|         |  |  |   +-----------------------+   | | | |             |
+|         |  |  |   |  +----------------+  +-+  | |   |             |
+|         |  |  +---|--|-- Inst. 1 Cb   |  | |--+ | | |             |
+|         |  +------|--|-- Inst. 2 Cb   |  | |----+   |             |
+|         |         |  |      ...       |  | |- - - + |             |
+|         +---------|--|-- Inst. k Cb   |  | |--------+             |
+|                   |  +----------------+  | |                      |
+|                   |                      +-+                      |
+|                   +-----------------------+                       |
++---------------------+-----------------------+---------------------+
+|    Net. Stack 1     |         ...           |    Net. Stack l     |
++---------------------+-----------------------+---------------------+
+
+
+
+                      Endpoint 
++------------------------------------------------------------------+
+|                                                                  |
+|   Dispatcher                                                     |
+| +--------------+  +-------------+     +--------------------+     | 
+| | Disp. Filter1|  | Instance I1 |-----+- Context/Profile 1 |    +-+ 
+| +--------------+  +-------------+     +- Context/Profile 2 |    | | i
+| +--------------+  +-------------+   / |         ...        |   d| | n
+| | Disp. Filter2|  | Instance I2 |__/  +--------------------+   o| | t
+| +--------------+  +-------------+           Domain D1          m| | e
+|                         ...                     ...            a| | r
+| +--------------+  +-------------+     +---------------------+  i| | f
+| | Disp. Filterk|  | Instance Ik |-----+- Context/Profile k  |  n| | a
+| +--------------+  +-------------+ ... +- Context/Profile k+1|   | | c
+| +--------------+  +-------------+   __|         ...         |   | | e
+| |Disp. Filter..|  | Instance .. |__/  +---------------------+   +-+ 
+| +--------------+  +-------------+           Domain Dn            | 
+|                                                                  |
+|                                                                  |
+|                                                                  |
+|                                                                  |
+|                                                                  |
++---------------------+----------------------+---------------------+
+|  Net. Interface 1   |         ...          |   Net. Interface l  |
++---------------------+----------------------+---------------------+
+
+                      Domain D1 
+   +------------------------------------------------------------+    
+   |                                                            |    
+  +-+                       +-------------+                    +-+   
+i | | p                     |  Context    |                  e | | i 
+n | | r                  +--|  Repository |-+                n | | n 
+t | | o  +-------------+ |  +-------------+ |  +----------+  d | | t 
+e | | v  |             |-+  +-------------+ +--| Endpoint |  p | | e 
+r | | i  | Provisioner |----|  Profile    |----|  Manager |  o | | r 
+f | | s  |             |-+  |  Repository |  +-|          |  i | | f 
+a | | i  +-------------+ |  +-------------+  | +----------+  n | | a 
+c | | o                  |  +-------------+  |               t | | c 
+e | | n                  +--| Endpoints   |--+                 | | e 
+  +-+                       |   Registry  |                    +-+   
+   |                        +-------------+                     |             
+   |                                                            |    
+   +------------------------------------------------------------+    
+~~~~~~~~
+
 ### Instance
 
 An `Instance` is the fundamental component that implements the SCHC protocol
