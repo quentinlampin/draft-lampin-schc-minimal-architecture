@@ -544,17 +544,24 @@ In this scenario, we consider the case where an `Endpoint` A is powered on and
   
 In scenario *S1*, `Endpoint` A initiates the configuration phase, effectively
   pulling the `Context` and `Profile` from the `Domain Manager` and the
-  `Context Repository`.
+  `Context Repository`. 
 
 In scenario *S2*, the `Domain Manager` is in charge of advertising its presence
   and pushing the `Context` and `Profile` to `Endpoint` A. 
   The advertisement can be done using a discovery mechanism, such as DNS-SD or 
   a predefined multicast address. 
-  Pushing the `Context` from the `Domain Manager` to the `Endpoint` A requires a
-  management protocol, as discussed in {{DRAFT-CORECONF}}.
+
+In both scenarios, a management protocol is required to enable the retrieval
+  of the `Context` and `Profile` from the `Domain Manager`. {{DRAFT-CORECONF}}
+  provides initial ideas on how to implement such a management protocol for SCHC
+  in a Constrained Environment, e.g. IoT devices.
+
 
 
 ## Core Components Illustrated
+
+This section provides an overview of the SCHC Core components their interactions
+and key functionalities and interfaces.
 
 ### Instance
 
@@ -563,12 +570,48 @@ An `Instance` is the fundamental component that implements the SCHC protocol
   its protocol stack. Each `Instance` operates independently, with its own 
   context and profile. 
 
-The functional architecture of a SCHC Instance is depicted in the following 
-figure:
+A functional architecture of a SCHC Instance is proposed in the following 
+  figure:
 
 ~~~~~~~~
+                    Endpoint 
++------------------------------------------------+
+| +-------------+     +---------------+          | 
+| | Instance I1 |-----+- Context C1   |         +-+ 
+| +-------------+     +- Context C2   |         | | i
+| +-------------+   / |     ...       |       d | | n
+| | Instance I2 |__/  +---------------+       o | | t
+| +-------------+         Domain D1           m | | e
+|       ...                 ...               a | | r
+| +-------------+     +---------------+       i | | f
+| | Instance Ik |-----+- Context Ck   |       n | | a
+| +-------------+ ... +- Context Ck+1 |         | | c
+| +-------------+   __|     ...       |         | | e
+| | Instance .. |__/  +---------------+         +-+ 
+| +-------------+         Domain Dn              | 
++------------------------------------------------+
+
+                      Domain D1 
+   +------------------------------------------------------------+    
+   |                                                            |    
+  +-+                       +-------------+                    +-+   
+i | | p                     |  Context    |                  e | | i 
+n | | r                  +--|  Repository |-+                n | | n 
+t | | o  +-------------+ |  +-------------+ |  +----------+  d | | t 
+e | | v  |             |-+  +-------------+ +--| Endpoint |  p | | e 
+r | | i  | Provisioner |----|  Profile    |----|  Manager |  o | | r 
+f | | s  |             |-+  |  Repository |  +-|          |  i | | f 
+a | | i  +-------------+ |  +-------------+  | +----------+  n | | a 
+c | | o                  |  +-------------+  |               t | | c 
+e | | n                  +--| Endpoints   |--+                 | | e 
+  +-+                       |   Registry  |                    +-+   
+   |                        +-------------+                     |             
+   |                                                            |    
+   +------------------------------------------------------------+    
+~~~~~~~~
+~~~~~~~~
 +-------------------------------------------------------------+
-|                    SCHC Instance                            |
+|                     SCHC Instance                           |
 +-------------------------------------------------------------+
 |                                                             |
 |  +----------------------+    +-------------------------+    |
@@ -588,7 +631,6 @@ figure:
 |  |   | - Dispatch        |    | - Set of Rules    |    |    |
 |  |   |   configuration   |    |   (SoR)           |    |    |
 |  |   | - matching policy |    | - parser ID       |    |    |
-|  |   |                   |    |                   |    |    |
 |  |   | - device-specific |    |                   |    |    |
 |  |   |   configuration   |    |                   |    |    |
 |  |   +-------------------+    +-------------------+    |    |
