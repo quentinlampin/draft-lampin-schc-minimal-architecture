@@ -84,11 +84,27 @@ normative:
     date: 2025-02
     seriesinfo:
       Internet-Draft: draft-ietf-schc-architecture-04
+  
   RFC2119:
   RFC8174:
 
 informative:
   RFC9363:
+
+  DRAFT-CORECONF:
+    title: " CORECONF Rule management for SCHC"
+    author:
+      -
+        name: Ana Minaburo
+      -
+        name: Laurent Toutain
+      -
+        name: Corentin Banier
+      -
+        name: Marion Dumay
+    date: 2025-05
+    seriesinfo:
+      Internet-Draft: draft-toutain-schc-coreconf-management-00
 
 entity:
         SELF: "[RFCXXXX]"
@@ -509,14 +525,43 @@ this document. However, the `Profile` SHALL include the following:
 - The rule matching policy, i.e. the policy used to select the appropriate
   compression or decompression rule based on the SCHC packet and the `Context`.
 
+## The cold boot scenario
+
+In this scenario, we consider the case where an `Endpoint` A is powered on and
+  needs to establish a SCHC `Session` with another `Endpoint` B. `Endpoint` A
+  does not have any SCHC `Context` or `Profile` stored in memory, and it needs
+  to retrieve or negotiate this information before establishing the session.
+
+  Two hypothetical scenarios are considered here:
+
+  - *S1*. `Endpoint` A is provisioned on the appropriate `Domain` and is 
+    configured with the address/URI of the `Domain Manager` and 
+    `Context Repository`.
+  - *S2*. `Endpoint` A is provisioned on the appropriate `Domain` but 
+    is not configured with the address/URI of the `Domain Manager` and 
+    `Context Repository`. In this scenario, the `Domain Manager` is in charge of
+    advertising its presence and push the context to `Endpoint` A.
+  
+In scenario *S1*, `Endpoint` A initiates the configuration phase, effectively
+  pulling the `Context` and `Profile` from the `Domain Manager` and the
+  `Context Repository`.
+
+In scenario *S2*, the `Domain Manager` is in charge of advertising its presence
+  and pushing the `Context` and `Profile` to `Endpoint` A. 
+  The advertisement can be done using a discovery mechanism, such as DNS-SD or 
+  a predefined multicast address. 
+  Pushing the `Context` from the `Domain Manager` to the `Endpoint` A requires a
+  management protocol, as discussed in {{DRAFT-CORECONF}}.
+
 
 ## Core Components Illustrated
 
-### SCHC Instance
+### Instance
 
-A SCHC Instance is the fundamental component that implements the SCHC protocol
-  as defined in {{RFC8724}}. A Network host MAY executes several SCHC Instances
-  in its protocol stack.
+An `Instance` is the fundamental component that implements the SCHC protocol
+  as defined in {{RFC8724}}. An `Endpoint` MAY execute several `Instances` in 
+  its protocol stack. Each `Instance` operates independently, with its own 
+  context and profile. 
 
 The functional architecture of a SCHC Instance is depicted in the following 
 figure:
