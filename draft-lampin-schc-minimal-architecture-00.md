@@ -116,26 +116,26 @@ entity:
 --- abstract
 
 This document investigates the requirements of a minimal architecture for the
- Static Context Header Compression (and fragmentation) protocol (SCHC).
- The intent is to identify the essential components their relationships and
- interfaces. To do so, the document considers scenarios of increasing 
- complexity involving the use of SCHC, from a simple point-to-point
- communication to a more complex deployment involving multiple SCHC Instances
- communicating with each other. In this process, the authors hope to identify
- the essential components of a SCHC architecture and their relationships.
+  Static Context Header Compression (and fragmentation) protocol (SCHC).
+  The intent is to identify the essential components their relationships and
+  interfaces. To do so, the document considers scenarios of increasing 
+  complexity involving the use of SCHC, from a simple point-to-point
+  communication to a more complex deployment involving multiple SCHC Instances
+  communicating with each other. In this process, the authors hope to identify
+  the essential components of a SCHC architecture and their relationships.
 
 --- middle
 
 # Introduction        
 
 The SCHC Working Group has developed the {{RFC8724}} SCHC technology for 
- Low-Power Wide-Area (LPWA) networks, providing efficient header compression
- and fragmentation mechanisms. As SCHC adoption expands beyond its original 
- scope, there is a need to define a minimal architecture that identifies only 
- the essential elements required for proper SCHC operation. This documents does
- not aim to replace the SCHC architecture defined in {{DRAFT-ARCH}}, but rather
- to investigate the minimal set of components and their relationships that are
- necessary for SCHC to function effectively in various deployment scenarios.
+  Low-Power Wide-Area (LPWA) networks, providing efficient header compression
+  and fragmentation mechanisms. As SCHC adoption expands beyond its original 
+  scope, there is a need to define a minimal architecture that identifies only 
+  the essential elements required for proper SCHC operation. This documents does
+  not aim to replace the SCHC architecture defined in {{DRAFT-ARCH}}, but rather
+  to investigate the minimal set of components and their relationships that are
+  necessary for SCHC to function effectively in various deployment scenarios.
 
 
 This document provides:
@@ -147,65 +147,65 @@ This document provides:
 # Requirements Notation
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
- "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
- document are to be interpreted as described in BCP 14 {{RFC2119}} {{RFC8174}} 
- when, and only when, they appear in all capitals, as shown here.
+  "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+  document are to be interpreted as described in BCP 14 {{RFC2119}} {{RFC8174}} 
+  when, and only when, they appear in all capitals, as shown here.
 
 # Terminology
 
 This section defines terminology and abbreviations used in this
- document. It borrows from the terminology of {{RFC8724}} and {{DRAFT-ARCH}}.
+  document. It borrows from the terminology of {{RFC8724}} and {{DRAFT-ARCH}}.
  
 In the following, terms used in the terminology are assumed to be defined in the
- context of the SCHC protocol unless specified otherwise, *.e.g* Endpoint refers
- to a SCHC Endpoint, Instance refers to a SCHC Instance, and so on.
+  context of the SCHC protocol unless specified otherwise, *.e.g* Endpoint 
+  refers to a SCHC Endpoint, Instance refers to a SCHC Instance, and so on.
 
 **Endpoint**: A network host capable of compressing and decompressing headers 
- and optionally fragmenting and reassembling packets. 
+  and optionally fragmenting and reassembling packets. 
 
 **Instance**: A logical component of an Endpoint that implements the SCHC 
- protocol, including header compression, fragmentation, and context management.
+  protocol, including header compression, fragmentation, and context management.
 
 **Context**: A set of rules and parameters that define how SCHC operations are 
- performed by `Instances` that implement this `Context`. It includes the Set of 
- Rules (SoR) and the parser ID.
+  performed by `Instances` that implement this `Context`. It includes the Set of 
+  Rules (SoR) and the parser ID.
 
 **Session**: A communication session between two SCHC Instances that 
- share a common context for compression and fragmentation operations. Whenever 
- the SCHC `Context` is updated, a new or updated `Session` is established.
+  share a common context for compression and fragmentation operations. Whenever 
+  the SCHC `Context` is updated, a new or updated `Session` is established.
 
 **Domain**: A logical grouping of SCHC Instances that share a common set of 
 `Contexts` for compression and fragmentation operations. 
 
 **Dispatcher**: A logical component that routes packets to the appropriate SCHC 
- Instance based on defined admission rules. It can be integrated into the 
- network stack or implemented as a separate component.
+  Instance based on defined admission rules. It can be integrated into the 
+  network stack or implemented as a separate component.
 
 **Profile**: A set of configurations that define how SCHC operations are 
- performed within a specific Instance. It includes parameters for the different
- SCHC components.
+  performed within a specific Instance. It includes parameters for the different
+  SCHC components.
 
 **Domain Manager**: A logical component that manages the SCHC domain, including 
- context synchronization and profile distribution.
+  context synchronization and profile distribution.
 
 **Context Repository**: A logical component that stores and manages SCHC
- contexts used by SCHC domains.
+  contexts used by SCHC domains.
 
 
 # Minimal Architecture Components
 
 In this section, we investigate the minimal components required for SCHC 
-operation in the context of a simple deployment scenario. 
+  operation in the context of typical deployment scenarios. 
 
 ## The simplest deployment scenario
 
 This section considers a simple point-to-point deployment scenario
- where two hosts communicate with each other using SCHC. The devices are 
- assumed to have a very simple network stack, as shown in the figure below:
+  where two `Endpoints` communicate with each other using SCHC. The devices are 
+  assumed to have a very simple network stack, as shown in the figure below:
 
 ~~~~~~~~
-+------------------+       +------------------+
-|    Endpoint A    |       |    Endpoint B    |
+
+     Endpoint A                 Endpoint B    
 +------------------+       +------------------+
 |  Application A   |       |  Application B   |
 +------------------+       +------------------+
@@ -228,49 +228,50 @@ This section considers a simple point-to-point deployment scenario
 In this scenario, 
 
 
-- Both Endpoint A and Endpoint B implement the SCHC protocol for header 
+- Both `Endpoint` A and `Endpoint` B implement the SCHC protocol for header 
   compression and decompression. 
-- Both endpoints feature a single application and all traffic is sent and 
+- Both `Endpoints` feature a single application and all traffic is sent and 
   received using the CoAP protocol over UDP over IPv6. 
 - The SCHC protocol is used to compress the CoAP, UDP, and IPv6
   headers before sending the packets over the LPWAN link layer. 
-- The SCHC protocol is implemented as a single SCHC `Instance` on each endpoint.
-- The SCHC `Instance` is hardwired into the protocol stack of each endpoint, 
+- The SCHC protocol is implemented as a single SCHC `Instance` on each 
+  `Endpoint`.
+- The SCHC `Instance` is hardwired into the protocol stack of each `Endpoint`, 
   meaning that it is not dynamically loaded or unloaded.
 - All of the traffic is compressed and decompressed using those `Instances`.
 
 In this simplistic scenario, which is representative of some LPWAN deployments,
  the requirements for the minimal architecture are as follows:
 
-- The Set Of Rules (SoR) of Host A MUST be compatible with the SoR of
-  Host B. Such compatitibility requires that rules IDs and Rule Descriptors are
-  consistent between the two `Instances`. Parsers of both `Instances` MUST 
-  be compatible, meaning that they MUST delineate the same header fields in the
-  same order and with the same semantics. 
-- Whenever Host A compresses a packet, it MUST use the same `Context` as Host 
-  B. This means that the `Context` MUST be synchronized between the two 
-  `Instances`. This communication session is referred to as a `Session`.
+- The Set Of Rules (SoR) of `Endpoint` A MUST be compatible with the SoR of
+  `Endpoint` B. Such compatitibility requires that rules IDs and Rule 
+  Descriptors are consistent between the two `Instances`. Parsers of both 
+  `Instances` MUST be compatible, meaning that they MUST delineate the same 
+  header fields in the same order and with the same semantics. 
+- Whenever `Endpoint` A compresses a packet, it MUST use the same `Context` as 
+  `Endpoint` B. This means that the `Context` MUST be synchronized between the 
+  two `Instances`. This communication session is referred to as a `Session`.
 
 
 ### Discussions
 
 **Why `Instance`?** Here we use the term `Instance` to refer to the SCHC 
- protocol routine that is running on each endpoint. This is different from the SCHC
- Instance defined in {{DRAFT-ARCH}}, which refers to a pair of SCHC endpoints
- that communicate through SCHC. 
+ protocol routine that is running on each endpoint. This is different from the 
+ SCHC Instance defined in {{DRAFT-ARCH}}, which refers to a pair of SCHC 
+ endpoints that communicate through SCHC. 
  
- The rationale for this terminology is that the term `Instance` is often used to
- refer to a specific realization of a class in object-oriented programming, and 
- in this case, the SCHC Instance is a specific realization of the SCHC protocol 
- that is running on each endpoint.
+The rationale for this terminology is that the term `Instance` is often used to
+  refer to a specific realization of a class in object-oriented programming, and
+  in this case, the SCHC `Instance` is a specific realization of the SCHC 
+  protocol that is running on each endpoint.
 
 **Session vs Instance**: In this document, we use the term `Session` to refer to
- a communication session between two (or more) SCHC Instances that are 
- communicating with each other using SCHC, using the same `Context`. 
+  a communication session between two (or more) SCHC Instances that are 
+  communicating with each other using SCHC, using the same `Context`. 
  
- The rationale for this is that the term `Session` is often used to refer to a 
- specific communication session between two endpoints and this definition 
- extends this concept to all SCHC `Instances` that maintain a common context.
+The rationale for this is that the term `Session` is often used to refer to a 
+  specific communication session between two endpoints and this definition 
+  extends this concept to all SCHC `Instances` that maintain a common context.
 
 
 ## The three endpoints deployment scenario
@@ -303,39 +304,40 @@ In this section, we consider a more complex deployment scenario where two or
          +--------------------+       +-------------------+            
 ~~~~~~~~
 
-In this scenario, we have three `Endpoints`, Endpoint A, Endpoint B, 
- and Endpoint C, that communicate with each other using SCHC. Here, Endpoint A 
- and Endpoint C are typically sensors or devices that send data to Endpoint B, 
- which is a gateway or server that collects and processes the data.
+In this scenario, we have three `Endpoints`, `Endpoint` A, `Endpoint` B, 
+  and `Endpoint` C, that communicate with each other using SCHC. Here, 
+  `Endpoint` A and `Endpoint` C are typically sensors or devices that send data 
+  to `Endpoint` B, which is a gateway or server that collects and processes the 
+  data.
  
- We further assume that `Endpoints` A and C have very similar traffic patterns,
- meaning that they send similar packets to Endpoint B. This allows the SCHC
- `Instances` on Host A, B and C to share the same SCHC Context, which reduces
- the complexity of administration and management of this deployment.
- In the following, we refer to `Instances` that share a SCHC `Context` as a 
- `Domain`.
+We further assume that `Endpoints` A and C have very similar traffic patterns,
+  meaning that they send similar packets to Endpoint B. This allows the SCHC
+  `Instances` on Host A, B and C to share the same SCHC Context, which reduces
+  the complexity of administration and management of this deployment.
+  In the following, we refer to `Instances` that share a SCHC `Context` as a 
+  `Domain`.
 
 
 In this typical IoT deployment scenario, the requirements for the minimal 
-architecture are as follows:
+  architecture are as follows:
 
-- The `Context` of all three `Endpoints` A MUST be compatible. This means that
-- the SoR, parsers, and rule IDs are consistent between the three `Instances`.
+- The `Context` of all three `Endpoints` MUST be compatible. This means that
+  the SoR, parsers, and rule IDs are consistent between the three `Instances`.
 - The `Context` MUST be synchronized between the three `Instances`. This
-  means that an updated SCHC Session between all three `Instances` is 
+  means that an updated `Session` between all three `Instances` is 
   established whenever the `Context` is updated or modified.
 - The SCHC `Domain` MUST be able to manage the SCHC `Contexts` of all 
-  `Instances` that belong to it. This includes the Endpoints enrollment, 
+  `Instances` that belong to it. This includes the `Endpoints` enrollment, 
   provisioning of `Contexts` and synchronization. This role is assumed by a
   logical component of the `Domain`, referred to as the `Domain Manager`.
 
 
 ### Discussions
 
-**Why synchronize the `Contexts` of A and C?** Synchronizing the `Contexts`
-  of Endpoint A and Endpoint C is desirable. This reduces the complexity of 
-  managing multiple `Contexts` at Endpoint B and eventually reduces the size 
-  of the Rules IDs, impacting the SCHC packet size.
+**Why synchronize the `Contexts` of A and C?** Synchronizing the `Contexts` of 
+  Endpoint A and Endpoint C is desirable. This reduces the complexity of 
+  managing multiple `Contexts` at Endpoint B and eventually reduces the size the
+  Rules IDs, impacting the SCHC packet size.
 
 **Domain Manager, why introduce a new function?** In a first approach, the 
   `Domain Manager` could be implemented as a component of the `Instance` that is
@@ -349,22 +351,22 @@ architecture are as follows:
 ## The dynamic traffic scenario
 
 In this section, we consider yet another more complex deployment scenario where 
- multiple `Endpoints` communicate with each other using SCHC, but the traffic 
- patterns of these `Endpoints` are dynamic and can change over time. This 
- scenario typically occurs in Smart Buildings applications, where different 
- configurations are deployed based on the current season, occupancy, etc. 
- For example, thermostats setpoints are set differently in winter and summer.
+  multiple `Endpoints` communicate with each other using SCHC, but the traffic 
+  patterns of these `Endpoints` are dynamic and change over time. This 
+  scenario typically occurs in Smart Buildings applications, where different 
+  configurations are deployed based on the current season, occupancy, etc. 
+  For example, thermostats setpoints are set differently in winter and summer.
 
- In this scenario, we have three `Endpoints` A, B and C. A, B feature a
- temperature and thermostat functionality, while C is a server that collects and
- processes the data from A and B.
+In this scenario, we have three `Endpoints` A, B and C. A, B feature a
+  temperature and thermostat functionality, while C is a server that collects and
+  processes the data from A and B.
 
- We further assume that the Endpoints A, B and C are first registered with the
- `Domain Manager` of the domain which they are part of, and that they are
- provisioned with an initial `Context`. This `Context` is used to compress
- the temperature and thermostat data sent by A and B to C. The `Context` is
- tailored to the specifics of the temperatures recorded during winter,
- and the thermostat setpoints used during this season.
+We further assume that the `Endpoints` A, B and C are first registered with the
+  `Domain Manager` of the domain which they are part of, and that they are
+  provisioned with an initial `Context`. This `Context` is used to compress the 
+  temperature and thermostat data sent by A and B to C, and is tailored to the 
+  specifics of the temperatures recorded during winter, and the thermostat 
+  setpoints used during this season.
 
 ~~~~~~~
       +----------------+
@@ -384,10 +386,10 @@ In this section, we consider yet another more complex deployment scenario where
 ~~~~~~~
 
 Then comes the spring, and the temperature and thermostat setpoints change. 
- The `Domain Manager` is responsible for updating the `Context` of all 
- `Instances` that belong to the domain, i.e. A, B and C. This update is done
- dynamically, meaning that the `Context` is updated without interrupting the 
- communication between the `Endpoints`.
+  The `Domain Manager` is responsible for updating the `Context` of all 
+  `Instances` that belong to the domain, i.e. A, B and C. This update is done
+  dynamically, meaning that the `Context` is updated without interrupting the 
+  communication between the `Endpoints`.
 
 ~~~~~~~
 +--------------------+
@@ -412,30 +414,32 @@ Then comes the spring, and the temperature and thermostat setpoints change.
             +--------------+  +--------------+  +--------------+
 ~~~~~~~
 
-This scenario highlights the need for a dynamic context update mechanism
- that allows the `Domain Manager` to update the `Context` of all `Instances`
- that belong to the `Domain`. 
+This scenario highlights the need for a dynamic context update mechanism that 
+  allows the `Domain Manager` to update the `Context` of all `Instances` 
+  belonging to the `Domain`. 
  
- This raises a number of questions, such as:
+This raises a number of questions, such as:
+
 - How to ensure that all `Instances` are updated with the new `Context`?
 - How to process packets sent before the `Context` update but received after?
 
 Answering those specific questions is critical for the proper operation of SCHC 
- in this scenario as unsynchronized `Contexts` can lead to packet loss or 
- misinterpretation at the receiving end.
+  in this scenario as unsynchronized `Contexts` can lead to packet loss or 
+  misinterpretation at the receiving end.
 
  It is worth noting that the same questions arise in the context of 
- configuration management and are possibly addressed by existing IETF protocols.
+  configuration management and are possibly addressed by existing IETF 
+  protocols.
 
  Nevertheless, we can already identify the need for the following:
 
 - A `Context Repository` that is responsible for storing the `Contexts` of
   the domain. In case of disagreement between `Instances`, the `Context 
-  Repository` is used to resolve the disagreement. Having one identified
-  source of truth for the `Contexts` helps to maintain consistency across
-  the domain. This is also useful when (new) nodes join the domain later, as
-  the `Context Repository` can provide the necessary `Context` information
-  to new or existing `Instances`.
+  Repository` is used to resolve the disagreement. Having one identified source 
+  of truth for the `Contexts` helps to maintain consistency across the domain. 
+  This is also useful when (new) nodes join the domain later, as the 
+  `Context Repository` can provide the necessary `Context` information to new or
+  existing `Instances`.
 - A mechanism for versioning `Contexts`, allowing the `Domain Manager` to
   manage multiple versions of a `Context` and facilitate rollbacks if needed.
 - A mechanism for notifying `Endpoints` of `Context` updates, ensuring that all
@@ -506,20 +510,62 @@ This new scenario introduces the following challenges:
 
 ## Heterogeneous Endpoints
 
-This additional scenario introduces heterogeneous `Endpoints` that may have 
- different capabilities, i.e. memory, processing power, and architecture, e.g.
- naming conventions for network interfaces. In this scenario, the `Context` 
- which contains the Set of Rules (SoR) and the parser ID, i.e. the configuration
- which is shared by all `Instances` of a `Domain`, cannot be assumed to provide
- the configuration that is specific to each `Endpoint`. For example, one cannot 
- assume that the `Context` provides the appropriate network interface ID for the
- Ethernet card of a Linux host, or the appropriate network interface name for a
- Windows host.
+This additional scenario introduces heterogeneous `Endpoints` that feature 
+  different hardware and software configurations. These differences may include
+  the Operating System or the hardware on which the `Instance` is run. Those 
+  differences is the source of a challenge in the deployment of `Instances` in 
+  configurations.
 
-In this scenario, the `Profile` is introduced as a configuration component that
-interfaces SCHC functional components to the specifics of each `Endpoint`. The 
-`Profile` itself is `Endpoint` specific so its actual content is out of scope of
-this document. However, the `Profile` SHALL include the following:
+To illustrate this challenge, we consider the following example, illustrated in
+  the figure below, where two `Endpoints` A and B are both running the same 
+  Operating System (OS), here a Linux-based distribution, but on two different 
+  hardware platforms. 
+
+~~~~~~~~
+
+           Endpoint A                         Endpoint B         
++------------------------------+   +------------------------------+ 
+|          Application         |   |          Application         |
++------------------------------+   +------------------------------+ 
+|             CoAP             |   |             CoAP             | 
++------------------------------+   +------------------------------+ 
+|             UDP              |   |             UDP              | 
++------------------------------+   +------------------------------+ 
+|             IPv6             |   |             IPv6             | 
++------------------------------+   +------------------------------+ 
+|             SCHC             |   |             SCHC             |
+|           Instance           |   |           Instance           | 
++------------------------------+   +------------------------------+ 
+|             eno0             |   |           enp2s0             | 
+|   Ethernet, onboard device,  |   |   Ethernet, PCI device       | 
+|           index 0            |   |         bus 2, slot 0        | 
++------------------------------+   +------------------------------+ 
+|      Physical Interface      |   |      Physical Interface      |    
++------------------------------+   +------------------------------+
+                |                                  |
+                +----------------------------------+
+~~~~~~~~
+
+`Endpoint` A features an Ethernet interface which is 
+  located on the mainboard and is referred to as `eno0`:  *en* standing for
+  "Ethernet", *o* for "onboard", and *0* for "index 0" in the udev naming 
+  convention.
+
+`Endpoint` B features an Ethernet interface which is located on a PCI bus and
+  is referred to as `enp2s0`: *en* standing for "Ethernet", *p* for "PCI", 
+  *2* for "bus 2", and *s0* for "slot 0" in the same naming convention.
+
+In this scenario, the `Context` which contains the Set of Rules (SoR) and parser
+  ID, i.e. the configuration which is shared by all `Instances` of a `Domain`, 
+  provides no information on how to instruct the `Dispatcher` to route packets
+  from the appropriate Network Interface to the appropriate `Instance`.
+  This advocates for configuration profiles that are specific to each `Endpoint`
+  configurations. In the following, we refer to such configuration as a 
+  `Profile`. 
+
+Such `Profiles` are `Endpoint` specific so their actual content is out of scope
+  of this document. However, the `Profile` SHALL include the following:
+
 - The configuration of the `Dispatcher`, i.e. the admission rules for 
   compression and decompression.
 - The rule matching policy, i.e. the policy used to select the appropriate
