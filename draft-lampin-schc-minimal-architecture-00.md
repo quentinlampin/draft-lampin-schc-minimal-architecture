@@ -2,7 +2,7 @@
 title: SCHC Minimal Architecture
 # abbrev: SCHC-Min-Arch
 docname: draft-lampin-schc-minimal-architecture-00
-date: 2025-07-21
+date: 2025-07-25
 
 
 # stand_alone: true
@@ -88,9 +88,6 @@ normative:
   RFC2119:
   RFC8174:
 
-informative:
-  RFC9363:
-
   DRAFT-CORECONF:
     title: " CORECONF Rule management for SCHC"
     author:
@@ -105,6 +102,9 @@ informative:
     date: 2025-05
     seriesinfo:
       Internet-Draft: draft-toutain-schc-coreconf-management-00
+
+informative:
+  RFC9363:
 
 entity:
         SELF: "[RFCXXXX]"
@@ -170,26 +170,31 @@ In the following, terms used in the terminology are assumed to be defined in the
   performed by `Instances` that implement this `Context`. It includes the Set of 
   Rules (SoR) and the parser ID.
 
-**Session**: A communication session between two SCHC Instances that 
-  share a common context for compression and fragmentation operations. Whenever 
-  the SCHC `Context` is updated, a new or updated `Session` is established.
+**Endpoint Manager**: A logical component that manages the lifecycle and 
+  configuration of `Instances` within an `Endpoint`. It is responsible for 
+  creating, updating, and deleting `Instances` as needed, synchronizing 
+  `Contexts` and `Profiles`, and managing the `Dispatcher`.
 
-**Domain**: A logical grouping of SCHC Instances that share a common set of 
+**Session**: A communication session between two `Instances` that 
+  share a common context for compression and fragmentation operations. Whenever 
+  the `Context` is updated, a new or updated `Session` is established.
+
+**Domain**: A logical grouping of `Instances` that share a common set of 
 `Contexts` for compression and fragmentation operations. 
 
-**Dispatcher**: A logical component that routes packets to the appropriate SCHC 
-  Instance based on defined admission rules. It can be integrated into the 
+**Dispatcher**: A logical component that routes packets to the appropriate 
+  `Instances` based on defined admission rules. It can be integrated into the 
   network stack or implemented as a separate component.
 
 **Profile**: A set of configurations that define how SCHC operations are 
-  performed within a specific Instance. It includes parameters for the different
-  SCHC components.
+  performed within a specific `Instance`. It includes parameters for the 
+  different SCHC components.
 
-**Domain Manager**: A logical component that manages the SCHC domain, including 
+**Domain Manager**: A logical component that manages the `Domain`, including 
   context synchronization and profile distribution.
 
-**Context Repository**: A logical component that stores and manages SCHC
-  contexts used by SCHC domains.
+**Context Repository**: A logical component that stores and manages the 
+  `Contexts` used by its `Domain`.
 
 
 # Minimal Architecture Components
@@ -205,24 +210,24 @@ This section considers a simple point-to-point deployment scenario
 
 ~~~~~~~~
 
-     Endpoint A                 Endpoint B    
-+------------------+       +------------------+
-|  Application A   |       |  Application B   |
-+------------------+       +------------------+
-|       CoAP       |       |       CoAP       |
-+------------------+       +------------------+
-|       UDP        |       |       UDP        |
-+------------------+       +------------------+
-|       IPv6       |       |       IPv6       |
-+------------------+       +------------------+
-|  SCHC Instance   |       |  SCHC Instance   |
-+------------------+       +------------------+
-| LPWAN Link Layer |       | LPWAN Link Layer |
-+------------------+       +------------------+
-|  Physical Layer  |       |  Physical Layer  |
-+------------------+       +------------------+
-         |                           |
-         +---------------------------+
+                Endpoint A                 Endpoint B    
+            +------------------+       +------------------+
+            |  Application A   |       |  Application B   |
+            +------------------+       +------------------+
+            |       CoAP       |       |       CoAP       |
+            +------------------+       +------------------+
+            |       UDP        |       |       UDP        |
+            +------------------+       +------------------+
+            |       IPv6       |       |       IPv6       |
+            +------------------+       +------------------+
+            |  SCHC Instance   |       |  SCHC Instance   |
+            +------------------+       +------------------+
+            | LPWAN Link Layer |       | LPWAN Link Layer |
+            +------------------+       +------------------+
+            |  Physical Layer  |       |  Physical Layer  |
+            +------------------+       +------------------+
+                    |                           |
+                    +---------------------------+
 ~~~~~~~~
 
 In this scenario, 
@@ -300,8 +305,8 @@ In this section, we consider a more complex deployment scenario where two or
 +------------------+    +------------------+    +------------------+
 |  Physical Layer  |    |  Physical Layer  |    |  Physical Layer  |
 +------------------+    +------------------+    +------------------+
-         |                    |       |                   |            
-         +--------------------+       +-------------------+            
+         |                    |       |                   |          
+         +--------------------+       +-------------------+          
 ~~~~~~~~
 
 In this scenario, we have three `Endpoints`, `Endpoint` A, `Endpoint` B, 
@@ -312,9 +317,9 @@ In this scenario, we have three `Endpoints`, `Endpoint` A, `Endpoint` B,
  
 We further assume that `Endpoints` A and C have very similar traffic patterns,
   meaning that they send similar packets to Endpoint B. This allows the SCHC
-  `Instances` on Host A, B and C to share the same SCHC Context, which reduces
+  `Instances` on Host A, B and C to share the same `Context`, which reduces
   the complexity of administration and management of this deployment.
-  In the following, we refer to `Instances` that share a SCHC `Context` as a 
+  In the following, we refer to `Instances` that share the same `Contexts` as a 
   `Domain`.
 
 
@@ -323,13 +328,13 @@ In this typical IoT deployment scenario, the requirements for the minimal
 
 - The `Context` of all three `Endpoints` MUST be compatible. This means that
   the SoR, parsers, and rule IDs are consistent between the three `Instances`.
-- The `Context` MUST be synchronized between the three `Instances`. This
+- The `Context` **MUST** be synchronized between the three `Instances`. This
   means that an updated `Session` between all three `Instances` is 
   established whenever the `Context` is updated or modified.
-- The SCHC `Domain` MUST be able to manage the SCHC `Contexts` of all 
-  `Instances` that belong to it. This includes the `Endpoints` enrollment, 
-  provisioning of `Contexts` and synchronization. This role is assumed by a
-  logical component of the `Domain`, referred to as the `Domain Manager`.
+- The `Domain` **MUST** be able to manage the `Contexts` of all `Instances` that
+  belong to it. This includes the `Endpoints` enrollment, provisioning of 
+  `Contexts` and synchronization. This role is assumed by a logical component of
+  the `Domain`, referred to as the `Domain Manager`.
 
 
 ### Discussions
@@ -348,25 +353,34 @@ In this typical IoT deployment scenario, the requirements for the minimal
   `Instance`, we allow for a more flexible and modular architecture that can be 
   adapted to different deployment scenarios.
 
+**Context compatibility or equality?** While not strictly required, it is 
+  desirable that the `Contexts` of all `Instances` that belong to the same 
+  `Domain` are equal, meaning that they share the same SoR, parsers, and rule 
+  IDs. This simplifies the management of the `Contexts` and reduces the risk of 
+  misconfiguration or incompatibility between `Instances`. However, this is not
+  strictly required, as long as the `Contexts` are compatible, meaning that they
+  can be used interchangeably without causing issues in compression or 
+  fragmentation operations.
+
 ## The dynamic traffic scenario
 
-In this section, we consider yet another more complex deployment scenario where 
-  multiple `Endpoints` communicate with each other using SCHC, but the traffic 
-  patterns of these `Endpoints` are dynamic and change over time. This 
-  scenario typically occurs in Smart Buildings applications, where different 
-  configurations are deployed based on the current season, occupancy, etc. 
-  For example, thermostats setpoints are set differently in winter and summer.
+In this section, we consider a deployment scenario where multiple `Endpoints` 
+  communicate with each other using SCHC, but the traffic patterns of these 
+  `Endpoints` are dynamic and change over time. This scenario typically occurs 
+  in Smart Buildings applications, where different configurations are deployed 
+  based on the current season, occupancy, etc. For example, thermostats 
+  setpoints are set differently in winter and summer.
 
 In this scenario, we have three `Endpoints` A, B and C. A, B feature a
-  temperature and thermostat functionality, while C is a server that collects and
-  processes the data from A and B.
+  temperature and thermostat functionality, while C is a server that collects 
+  and processes the data from A and B.
 
 We further assume that the `Endpoints` A, B and C are first registered with the
   `Domain Manager` of the domain which they are part of, and that they are
   provisioned with an initial `Context`. This `Context` is used to compress the 
   temperature and thermostat data sent by A and B to C, and is tailored to the 
   specifics of the temperatures recorded during winter, and the thermostat 
-  setpoints used during this season.
+  setpoints used during this season, as shown in the figure below:
 
 ~~~~~~~
       +----------------+
@@ -385,10 +399,10 @@ We further assume that the `Endpoints` A, B and C are first registered with the
             +--------------+  +--------------+  +--------------+
 ~~~~~~~
 
-Then comes the spring, and the temperature and thermostat setpoints change. 
+Then comes the spring, and the temperature and thermostat setpoints change.
   The `Domain Manager` is responsible for updating the `Context` of all 
   `Instances` that belong to the domain, i.e. A, B and C. This update is done
-  dynamically, meaning that the `Context` is updated without interrupting the 
+  dynamically, meaning that the `Context` is updated without interrupting the
   communication between the `Endpoints`.
 
 ~~~~~~~
@@ -414,8 +428,8 @@ Then comes the spring, and the temperature and thermostat setpoints change.
             +--------------+  +--------------+  +--------------+
 ~~~~~~~
 
-This scenario highlights the need for a dynamic context update mechanism that 
-  allows the `Domain Manager` to update the `Context` of all `Instances` 
+This scenario highlights the need for a dynamic context update mechanism that
+  allows the `Domain Manager` to update the `Context` of all `Instances`
   belonging to the `Domain`. 
  
 This raises a number of questions, such as:
@@ -423,21 +437,21 @@ This raises a number of questions, such as:
 - How to ensure that all `Instances` are updated with the new `Context`?
 - How to process packets sent before the `Context` update but received after?
 
-Answering those specific questions is critical for the proper operation of SCHC 
+Answering those specific questions is critical for the proper operation of SCHC
   in this scenario as unsynchronized `Contexts` can lead to packet loss or 
   misinterpretation at the receiving end.
 
- It is worth noting that the same questions arise in the context of 
-  configuration management and are possibly addressed by existing IETF 
+ It is worth noting that the same questions arise in the context of
+  configuration management and are possibly addressed by existing IETF
   protocols.
 
  Nevertheless, we can already identify the need for the following:
 
 - A `Context Repository` that is responsible for storing the `Contexts` of
-  the domain. In case of disagreement between `Instances`, the `Context 
-  Repository` is used to resolve the disagreement. Having one identified source 
-  of truth for the `Contexts` helps to maintain consistency across the domain. 
-  This is also useful when (new) nodes join the domain later, as the 
+  the domain. In case of disagreement between `Instances`, the `Context
+  Repository` is used to resolve the disagreement. Having one identified source
+  of truth for the `Contexts` helps to maintain consistency across the domain.
+  This is also useful when (new) nodes join the domain later, as the
   `Context Repository` can provide the necessary `Context` information to new or
   existing `Instances`.
 - A mechanism for versioning `Contexts`, allowing the `Domain Manager` to
@@ -449,38 +463,38 @@ Answering those specific questions is critical for the proper operation of SCHC
 ## Multiple SCHC Instances in the same Endpoint
 
 In this scenario, a single `Endpoint` that hosts multiple `Instances` is 
- considered. This scenario involves each `Instance` being configured with
- different `Contexts`. This can be useful for supporting multiple applications
- or services with distinct traffic patterns. One such use-case arises when
- a single `Endpoint` needs to handle different types of traffic, potentially
- sent and received on different network interfaces, each requiring
- its own `Instance` with tailored compression and fragmentation settings.
+  considered. This scenario involves each `Instance` being configured with
+  different `Contexts`. This can be useful for supporting multiple applications
+  or services with distinct traffic patterns. One such use-case arises when
+  a single `Endpoint` needs to handle different types of traffic, potentially
+  sent and received on different network interfaces, each requiring
+  its own `Instance` with tailored compression and fragmentation settings.
 
 ~~~~~~~~
 
             Endpoint A                          Endpoint B         
-+------------------------------+     +------------------------------+   
++------------------------------+     +------------------------------+
 |    App. 1     |   App. 2     |     |    App. 1     |   App. 2     |
-+------------------------------+     +------------------------------+   
-|     CoAP      |    HTTP      |     |     CoAP      |    HTTP      |   
-+------------------------------+     +------------------------------+   
-|      UDP      |   UDP/QUIC   |     |      UDP      |   UDP/QUIC   |   
-+------------------------------+     +------------------------------+   
-|             IPv6             |     |             IPv6             |   
-+------------------------------+     +------------------------------+   
++------------------------------+     +------------------------------+
+|     CoAP      |    HTTP      |     |     CoAP      |    HTTP      |
++------------------------------+     +------------------------------+
+|      UDP      |   UDP/QUIC   |     |      UDP      |   UDP/QUIC   |
++------------------------------+     +------------------------------+
+|             IPv6             |     |             IPv6             |
++------------------------------+     +------------------------------+
 |     SCHC      |     SCHC     |     |     SCHC      |     SCHC     |
 |  Instance A1  | Instance A2  |     |  Instance B1  | Instance B2  |
-+------------------------------+     +------------------------------+   
-|           Link Layer         |     |           Link Layer         |   
-+------------------------------+     +------------------------------+   
-|         Physical Layer       |     |         Physical Layer       |   
-+------------------------------+     +------------------------------+   
++------------------------------+     +------------------------------+
+|           Link Layer         |     |           Link Layer         |
++------------------------------+     +------------------------------+
+|         Physical Layer       |     |         Physical Layer       |
++------------------------------+     +------------------------------+
                 |                                     |
                 +-------------------------------------+
 ~~~~~~~~
 
-In the above example, two `Endpoints`, A and B, each host two SCHC `Instances`.
- `Endpoint` A hosts `Instance` A1 and `Instance` A2, while `Endpoint` B hosts 
+In the above example, two `Endpoints`, A and B, each host two `Instances`.
+ `Endpoint` A hosts `Instance` A1 and `Instance` A2, while `Endpoint` B hosts
  `Instance` B1 and `Instance` B2. `Instance` A1 and `Instance` B1 are configured
   to handle CoAP traffic and share a common `Context` C1 while `Instance` A2 and
   `Instance` B2 are configured to handle HTTP traffic and share a common 
@@ -488,20 +502,20 @@ In the above example, two `Endpoints`, A and B, each host two SCHC `Instances`.
 
 This new scenario introduces the following challenges:
 
-- **Datagram Dispatch**: The `Endpoint` must be able to dispatch packets to the 
-  appropriate `Instance` based on the protocol or application in use. This 
-  requires an additional functional unit, the `Dispatcher`, that can identify 
-  and dispatch packets to the correct `Instance` for compression and 
-  fragmentation. Conversely, the `Dispatcher` must also be able to route inbound 
-  compressed and fragmented packets to the correct `Instance` for decompression 
+- **Datagram Dispatch**: The `Endpoint` must be able to dispatch packets to the
+  appropriate `Instance` based on the protocol or application in use. This
+  requires an additional functional unit, the `Dispatcher`, that can identify
+  and dispatch packets to the correct `Instance` for compression and
+  fragmentation. Conversely, the `Dispatcher` must also be able to route inbound
+  compressed and fragmented packets to the correct `Instance` for decompression
   and reassembly.
 
-  In the above example, uncompressed CoAP/UDP packets must be dispatched to 
-  `Instances` A1 and B1, while uncompressed HTTP/QUIC packets must be dispatched 
-  to `Instances` A2 and B2. Additionally, compressed CoAP/UDP packets must be 
-  dispatched to `Instances` A1 and B1, while compressed HTTP/QUIC packets must 
-  be dispatched to `Instances` A2 and B2 for decompression. Solutions to this
-  problem are discussed in section  {{sec-dispatcher}}.
+  In the above example, uncompressed CoAP/UDP packets must be dispatched to
+  `Instances` A1 and B1, while uncompressed HTTP/QUIC packets must be dispatched
+  to `Instances` A2 and B2. Additionally, compressed CoAP/UDP packets must be
+  dispatched to `Instances` A1 and B1, while compressed HTTP/QUIC packets must
+  be dispatched to `Instances` A2 and B2 for decompression. This challenge is
+  discussed specifically in section {{sec-dispatcher}}.
 
 - **Instance/Context Identification**: In addition to the need for a `Dispatch`
   mechanism, each `Instance` or `Context` must be uniquely identifiable,
@@ -510,16 +524,16 @@ This new scenario introduces the following challenges:
 
 ## Heterogeneous Endpoints
 
-This additional scenario introduces heterogeneous `Endpoints` that feature 
+This additional scenario introduces heterogeneous `Endpoints` that feature
   different hardware and software configurations. These differences may include
-  the Operating System or the hardware on which the `Instance` is run. Those 
-  differences is the source of a challenge in the deployment of `Instances` in 
-  configurations.
+  the Operating System (OS) or the hardware on which the `Instance` is run.
+  Those differences are the source of a challenge in the deployment of
+  `Instances` in configurations.
 
 To illustrate this challenge, we consider the following example, illustrated in
-  the figure below, where two `Endpoints` A and B are both running the same 
-  Operating System (OS), here a Linux-based distribution, but on two different 
-  hardware platforms. 
+  the figure below, where two `Endpoints` A and B are both running the same
+  OS, here a Linux-based distribution using udev for device management, but on
+  two different hardware platforms.
 
 ~~~~~~~~
 
@@ -540,69 +554,99 @@ To illustrate this challenge, we consider the following example, illustrated in
 |   Ethernet, onboard device,  |   |   Ethernet, PCI device       | 
 |           index 0            |   |         bus 2, slot 0        | 
 +------------------------------+   +------------------------------+ 
-|      Physical Interface      |   |      Physical Interface      |    
+|      Physical Interface      |   |      Physical Interface      |
 +------------------------------+   +------------------------------+
                 |                                  |
                 +----------------------------------+
 ~~~~~~~~
 
-`Endpoint` A features an Ethernet interface which is 
-  located on the mainboard and is referred to as `eno0`:  *en* standing for
-  "Ethernet", *o* for "onboard", and *0* for "index 0" in the udev naming 
-  convention.
+`Endpoint` A features an Ethernet interface which is located on the mainboard
+  and is referred to as `eno0`:  *en* standing for "Ethernet",
+*o* for "onboard", and *0* for "index 0" in the udev naming convention.
 
 `Endpoint` B features an Ethernet interface which is located on a PCI bus and
-  is referred to as `enp2s0`: *en* standing for "Ethernet", *p* for "PCI", 
+  is referred to as `enp2s0`: *en* standing for "Ethernet", *p* for "PCI",
   *2* for "bus 2", and *s0* for "slot 0" in the same naming convention.
 
 In this scenario, the `Context` which contains the Set of Rules (SoR) and parser
-  ID, i.e. the configuration which is shared by all `Instances` of a `Domain`, 
+  ID, i.e. the configuration which is shared by all `Instances` of a `Domain`,
   provides no information on how to instruct the `Dispatcher` to route packets
   from the appropriate Network Interface to the appropriate `Instance`.
-  This advocates for configuration profiles that are specific to each `Endpoint`
-  configurations. In the following, we refer to such configuration as a 
-  `Profile`. 
 
+Without further configuration and unless the `Dispatcher` intercepts all packets
+  from all network interfaces, we cannot guarantee the correct dispatching of
+  packets to the appropriate `Instances`. Obviously, intercepting traffic from
+  all network interfaces is not a viable solution, as it would require the
+  inspection of all packets, regardless of their destination, which requires
+  significant processing power and may introduce unacceptable latency on
+  high-speed links.
+
+Additionally, different OSes may use different filtering/dispatch frameworks,
+  e.g. Netfilter on Linux, BPF on FreeBSD, PF on OpenBSD and macOS etc. This
+  means that the foundation on which the `Dispatcher` implementation relies may
+  vary significantly between different platforms and could require different
+  configurations to dispatch packets to `Instances` based on the same `Context`
+  but running on different `Endpoints`.
+
+This assessment advocates for the introduction of a device-specific
+  configuration that is independent of the `Context`, which we name `Profile`.
+  
 Such `Profiles` are `Endpoint` specific so their actual content is out of scope
-  of this document. However, the `Profile` SHALL include the following:
+  of this document. However, the `Profile` **SHALL** include the following:
 
 - The configuration of the `Dispatcher`, i.e. the admission rules for 
   compression and decompression.
 - The rule matching policy, i.e. the policy used to select the appropriate
   compression or decompression rule based on the SCHC packet and the `Context`.
 
+As the `Profile` is `Endpoint` specific, it is not shared between `Instances` of
+  different `Endpoints`. However, the `Profile` required for a given `Instance`
+  may need to change when the `Context` is updated, e.g. the filtering rules may
+  need to be adjusted to account for the new traffic patterns and C/D rules.
+
+This means that the `Profile` may need to be updated whenever the `Context` is
+  updated, and that the `Domain Manager` **SHALL** therefore be responsible for
+  managing the `Profile` delivery to `Instances` and their synchronization with
+  the `Context`.
+
 ## The cold boot scenario
 
 In this scenario, we consider the case where an `Endpoint` A is powered on and
   needs to establish a SCHC `Session` with another `Endpoint` B. `Endpoint` A
-  does not have any SCHC `Context` or `Profile` stored in memory, and it needs
-  to retrieve or negotiate this information before establishing the session.
+  does not have any `Context` or `Profile` stored in memory, and it needs to
+  retrieve or negotiate this information before establishing the session.
 
   Two hypothetical scenarios are considered here:
 
-  - *S1*. `Endpoint` A is provisioned on the appropriate `Domain` and is 
-    configured with the address/URI of the `Domain Manager` and 
+  - *S1*. `Endpoint` A is provisioned on the appropriate `Domain` and is
+    configured with the address/URI of the `Domain Manager` and
     `Context Repository`.
-  - *S2*. `Endpoint` A is provisioned on the appropriate `Domain` but 
-    is not configured with the address/URI of the `Domain Manager` and 
+  - *S2*. `Endpoint` A is provisioned on the appropriate `Domain` but is not
+    configured with the address/URI of the `Domain Manager` and 
     `Context Repository`. In this scenario, the `Domain Manager` is in charge of
     advertising its presence and push the context to `Endpoint` A.
   
 In scenario *S1*, `Endpoint` A initiates the configuration phase, effectively
   pulling the `Context` and `Profile` from the `Domain Manager` and the
-  `Context Repository`. 
+  `Context Repository`. This scenario implies that the `Domain Manager` exposes
+  a management interface that allows `Endpoints` to retrieve the necessary
+  configuration information. Additionally, a logical component referred to as
+  `Endpoint Manager` is required to manage the `Instances` of the `Endpoint`.
 
 In scenario *S2*, the `Domain Manager` is in charge of advertising its presence
-  and pushing the `Context` and `Profile` to `Endpoint` A. 
-  The advertisement can be done using a discovery mechanism, such as DNS-SD or 
-  a predefined multicast address. 
+  and `Endpoint` A is pulling the `Contexts` and `Profiles` from it.
+  The advertisement can be done using a discovery mechanism, such as DNS-SD or a
+  predefined multicast address. This scenario implies that `Endpoints` are
+  capable of discovering the `Domain Manager` and retrieving the necessary
+  configuration information. This further requires that `Endpoints` feature a
+  service discovery mechanism and a `Management Protocol` that enables them to
+  interact with the `Domain Manager` and request the required `Context` and
+  `Profile`.
 
 In both scenarios, a management protocol is required to enable the retrieval
   of the `Context` and `Profile` from the `Domain Manager`. {{DRAFT-CORECONF}}
   provides initial ideas on how to implement such a management protocol for SCHC
   in a Constrained Environment, e.g. IoT devices.
-
-
 
 ## Core Components Illustrated
 
@@ -612,27 +656,29 @@ and key functionalities and interfaces.
 ### Endpoint
 
 An `Endpoint` is a network host capable of compressing and decompressing headers
- and optionally fragmenting and reassembling packets. It implements the SCHC 
- protocol as defined in {{RFC8724}}. An `Endpoint` can host multiple SCHC 
- `Instances`, each with its own context and profile.
+  and optionally fragmenting and reassembling packets. It implements the SCHC
+  protocol as defined in {{RFC8724}}. An `Endpoint` can host multiple
+  `Instances`, each with its own `Context` and `Profile`.
 
 ~~~~~~~~
-                    Endpoint 
-+------------------------------------------------+
-| +-------------+     +---------------+          | 
-| | Instance I1 |-----+- Context C1   |         +-+ 
-| +-------------+     +- Context C2   |         | | i
-| +-------------+   / |     ...       |       d | | n
-| | Instance I2 |__/  +---------------+       o | | t
-| +-------------+         Domain D1           m | | e
-|       ...                 ...               a | | r
-| +-------------+     +---------------+       i | | f
-| | Instance Ik |-----+- Context Ck   |       n | | a
-| +-------------+ ... +- Context Ck+1 |         | | c
-| +-------------+   __|     ...       |         | | e
-| | Instance .. |__/  +---------------+         +-+ 
-| +-------------+         Domain Dn              | 
-+------------------------------------------------+
+        retrieve,
+      synchronize  +------------+
+     + - - - - - - |  Endpoint  |
+     |   +---------|  Manager   |
+         |         +------------+
+     |   |              | manages       
+         |              | lifecycle     
++------------+          | of Instances  
+| Context C1 |     +-------------+                     
+| Profile P1 |-----| Instance I1 |                     
++------------+     +-------------+    +------------+
+    ...                 ...           | Dispatcher |
++------------+     +-------------+    +------------+
+| Context Ck |-----| Instance Ik |                  
+| Profile Pk |     +-------------+                     
++------------+         
+
+
 ~~~~~~~~
 
 
@@ -735,38 +781,36 @@ This component is responsible for fragmenting larger packets into smaller
 
 ### SCHC Session
 
-~~~~~~~~
-+--------------------------------------------------------------------+
-|                               Session                              |
-+--------------------------------------------------------------------+
-|                                                                    |
-|      Endpoint A                                  Endpoint B        |
-|   +------------------+                      +------------------+   |
-|   |  SCHC Instance   | <---           ----> |  SCHC Instance   |   |
-|   +------------------+     \         /      +------------------+   |
-|                             \       /                              |
-|                              Session                               |
-|                             /       \                              |
-|   +------------------+     /         \      +------------------+   |
-|   |  SCHC Instance   | <---           --->  |  SCHC Instance   |   |
-|   +------------------+                      +------------------+   |
-|      Endpoint C                                  Endpoint D        |
-|                                                                    |
-+--------------------------------------------------------------------+
+As illustrated in the figure below, the `Session` is a communication session 
+  between two or more `Instances` that share a common `Context`, i.e. they are 
+  part of the same `Domain`. It is established whenever the `Context` is updated
+  or modified.
 
 ~~~~~~~~
+                                                              
+   Endpoint A                                  Endpoint B     
++------------------+                      +------------------+
+|  SCHC Instance   | <---           ----> |  SCHC Instance   |
++------------------+     \         /      +------------------+
+                          \       /                           
+                           Session                            
+                          /       \                           
++------------------+     /         \      +------------------+
+|  SCHC Instance   | <---           --->  |  SCHC Instance   |
++------------------+                      +------------------+
+   Endpoint C                                  Endpoint D     
+
+~~~~~~~~
 
 
-The SCHC `Session` is a communication session between two or more `Instances` 
- that share a common `Context`, i.e. they are part of the same `Domain`. It is 
- established whenever the `Context` is updated or modified.
+
 
 ### SCHC Domain & Domain Manager
 
 The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC 
- Contexts of all `Instances` that belong to it. The `Domain Manager` is the
- component responsible for this management. It handles Endpoints Enrollment, 
- and `Context` synchronization.
+  Contexts of all `Instances` that belong to it. The `Domain Manager` is the
+  component responsible for this management. It handles Endpoints Enrollment, 
+  and `Context` synchronization.
 
 ~~~~~~~~
 +-------------------------------------------------------------------+
@@ -798,22 +842,22 @@ SCHC Domain, different illutration.
 
 ~~~~~~~~
                        
-   +------------------------------------------------------------+    
-   |                                                            |    
-  +-+                       +-------------+                    +-+   
-i | | p                     |  Context    |                  e | | i 
-n | | r                  +--|  Repository |-+                n | | n 
-t | | o  +-------------+ |  +-------------+ |  +----------+  d | | t 
-e | | v  |             |-+  +-------------+ +--| Endpoint |  p | | e 
-r | | i  | Provisioner |----|  Profile    |----|  Manager |  o | | r 
-f | | s  |             |-+  |  Repository |  +-|          |  i | | f 
-a | | i  +-------------+ |  +-------------+  | +----------+  n | | a 
-c | | o                  |  +-------------+  |               t | | c 
-e | | n                  +--| Endpoints   |--+                 | | e 
-  +-+                       |   Registry  |                    +-+   
-   |                        +-------------+                     |             
-   |                                                            |    
-   +------------------------------------------------------------+    
+   +------------------------------------------------------------+   
+   |                                                            |   
+  +-+                       +-------------+                    +-+  
+i | | p                     |  Context    |                  e | | i
+n | | r                  +--|  Repository |-+                n | | n
+t | | o  +-------------+ |  +-------------+ |  +----------+  d | | t
+e | | v  |             |-+  +-------------+ +--| Endpoint |  p | | e
+r | | i  | Provisioner |----|  Profile    |----|  Manager |  o | | r
+f | | s  |             |-+  |  Repository |  +-|          |  i | | f
+a | | i  +-------------+ |  +-------------+  | +----------+  n | | a
+c | | o                  |  +-------------+  |               t | | c
+e | | n                  +--| Endpoints   |--+                 | | e
+  +-+                       |   Registry  |                    +-+  
+   |                        +-------------+                     |   
+   |                                                            |   
+   +------------------------------------------------------------+   
 ~~~~~~~~
 
 
@@ -836,30 +880,30 @@ Dispatcher is illustrated in the figure below, where two SCHC `Instances`
 
 ~~~~~~~~
                                reinject
-+----------------------------------------------------------------------+
-|                                                                      |
-|                                                Profile1    Context1  |
-|                                                   |          |       |
-|                                                   +-----+----+       |
-|                                                         |            |
-|  +- - - - - - -+                                    Instance 1       |
-|  |  Packet p+1 |                                  + - - - - - -+     |
-|  +-------------+    + - - - - - - - - - -+        |- compress  |     |
-+->|  Packet p   | + -|  chain_inst1_comp  |        + - - - - - -+     |
-   +-------------+ |  + - - - - - - - - - -+        |- decompress|     |
-   |  Packet p-1 | + -| chain_inst1_decomp |        + - - - - - -+     |
-   +- - - - - - -+ |  +--------------------+                           |
-        Packet     +->| chain_inst2_comp   |--+                        |
-         Queue     |  +--------------------+  |     +------------+     |            
-                   + -| chain_inst2_decomp |  +---->|- compress  |-----+            
-                      + - - - - - - - - - -+        +------------+                  
-                      |        . . .       |        |- decompress|                  
-                      + - - - - - - - - - -+        + - - - - - -+                  
-                            Dispatcher                Instance 2
-                                                          |
-                                                    +-----+----+
-                                                    |          |
-                                                Profile2    Context2
++------------------------------------------------------------------+
+|                                                                  |
+|                                             Profile1   Context1  |
+|                                                 |          |     |
+|                                                 +-----+----+     |
+|                                                       |          |
+|  +- - - - - - -+                                  Instance 1     |
+|  |  Packet p+1 |                                + - - - - - -+   |
+|  +-------------+    + - - - - - - - - - -+      |- compress  |   |
++->|  Packet p   | + -|  chain_inst1_comp  |      + - - - - - -+   |
+   +-------------+ |  + - - - - - - - - - -+      |- decompress|   |
+   |  Packet p-1 | + -| chain_inst1_decomp |      + - - - - - -+   |
+   +- - - - - - -+ |  +--------------------+                       |
+        Packet     +->| chain_inst2_comp   |--+                    |
+         Queue     |  +--------------------+  |   +------------+   |
+                   + -| chain_inst2_decomp |  +-->|- compress  |---+
+                      + - - - - - - - - - -+      +------------+    
+                      |        . . .       |      |- decompress|    
+                      + - - - - - - - - - -+      + - - - - - -+    
+                            Dispatcher              Instance 2
+                                                        |
+                                                  +-----+----+
+                                                  |          |
+                                              Profile2   Context2
 
 ~~~~~~~~
 
@@ -887,7 +931,7 @@ Below is a description of the Dispatcher components and their interfaces:
 |  |     (schc_instance1, c_admission_rules_1),                  |    |
 |  |     (schc_instance2, c_admission_rules_2),                  |    |
 |  |     ...                                                     |    |
-|  |   ]                                                         |    |   
+|  |   ]                                                         |    |
 |  | - decompression_callbacks: [                                |    |
 |  |     (schc_instance1, admission_rules_1),                    |    |
 |  |     (schc_instance2, admission_rules_2),                    |    |
@@ -900,15 +944,15 @@ Below is a description of the Dispatcher components and their interfaces:
 
 The Dispatcher MUST implement the following interface:
 - `register_compression_hook(admission_rules)`:
-    registers a compression hook with the Dispatch Engine, which is used to 
-    identify packets that should be compressed by SCHC. The admission rules 
-    define the criteria for packet selection, such as specific header fields or 
-    values.
+  registers a compression hook with the Dispatch Engine, which is used to 
+  identify packets that should be compressed by SCHC. The admission rules 
+  define the criteria for packet selection, such as specific header fields or 
+  values.
 - `register_decompression_hook(admission_rules)`:
-    registers a decompression hook with the Dispatch Engine, which is used to 
-    identify packets that should be decompressed by SCHC. The admission rules 
-    define the criteria for packet selection, such as specific header fields or 
-    values.
+  registers a decompression hook with the Dispatch Engine, which is used to 
+  identify packets that should be decompressed by SCHC. The admission rules 
+  define the criteria for packet selection, such as specific header fields or 
+  values.
 
 
 **Dispatch scenarios**:
@@ -969,57 +1013,57 @@ The Dispatcher MUST implement the following interface:
 ~~~~~~
 
 In this simple scenario, the Dispatch Engine is integrated into
- the network stack and there is a unique predefined SCHC Instance for a specific 
- protocol stack, such as CoAP over UDP over IPv6. This is the classic case for 
- SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}}, 
- {{RFC9363}}.
+  the network stack and there is a unique predefined SCHC Instance for a 
+  specific protocol stack, such as CoAP over UDP over IPv6. This is the classic 
+  case for SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}}, 
+  {{RFC9363}}.
 
 The dispatching is done based on a identified header field, such as the an 
- ethertype, the IPv6 Next Header field, a specific UDP port, etc.
+  ethertype, the IPv6 Next Header field, a specific UDP port, etc.
  
 This implementation scenario therefore assumes that the endpoint Operating 
- System (OS) implements the SCHC protocol as part of its network stack and that 
- SCHC is allocated the appropriate ethertype, IPv6 Next Header value or UDP 
- port from IANA.
+  System (OS) implements the SCHC protocol as part of its network stack and that 
+  SCHC is allocated the appropriate ethertype, IPv6 Next Header value or UDP 
+  port from IANA.
 
 In the example above, 
 
 * On Endpoint 1, the Dispatch "intercepts" outbound packets whose UDP 
- destination port is 5678, which is used by CoAP. It then routes these packets 
- to the SCHC Instance for CoAP over UDP over IPv6. The SCHC instance 
- then compresses the CoAP, UDP and IPv6 headers, and calls the Link Layer
- interface to send the compressed packet over the network, setting the
- appropriate SCHC ethertype in the link layer header.
+  destination port is 5678, which is used by CoAP. It then routes these packets 
+  to the SCHC Instance for CoAP over UDP over IPv6. The SCHC instance 
+  then compresses the CoAP, UDP and IPv6 headers, and calls the Link Layer
+  interface to send the compressed packet over the network, setting the
+  appropriate SCHC ethertype in the link layer header.
 
 * On Endpoint 2, incoming packets whose SCHC ethertype is set to the SCHC value
- are routed to the SCHC Instance for CoAP over UDP over IPv6. The SCHC Instance
- decompresses the SCHC packets and delivers them to the IPv6 layer.
+  are routed to the SCHC Instance for CoAP over UDP over IPv6. The SCHC Instance
+  decompresses the SCHC packets and delivers them to the IPv6 layer.
 
 Note that in this example, regular HTTP over QUIC traffic is also present on the
- same Endpoint. The Dispatch Engine is able to discriminate those packets from 
- packets that are compressed by SCHC, as the HTTP over QUIC packets do not
- not match the admission rules defined in the SCHC profile, here
- `UDP Destination Port == 5678`.
+  same Endpoint. The Dispatch Engine is able to discriminate those packets from 
+  packets that are compressed by SCHC, as the HTTP over QUIC packets do not
+  not match the admission rules defined in the SCHC profile, here
+  `UDP Destination Port == 5678`.
 
 
 #### Case 2: The Dispatch engine lives outside of the network stack.
 
 In this case, the Dispatch Engine is a separate component that
- interacts with multiple SCHC Instances. It is responsible for routing packets
- to the appropriate SCHC Instance based on the packet type and supplied
- admission rules. 
+  interacts with multiple SCHC Instances. It is responsible for routing packets
+  to the appropriate SCHC Instance based on the packet type and supplied
+  admission rules. 
 
  - On Linux, this can be implemented using netfilter hooks or similar mechanisms
-  to intercept packets and route them to and from the appropriate SCHC Instance. 
+  to intercept packets and route them to and from the appropriate SCHC Instance.
 
  - On macOS, the Dispatch Engine can be implemented as a kernel extension or 
- user-space application that make use of PF, the native packet filter.
+  user-space application that make use of PF, the native packet filter.
 
- The exact implementation details of the Dispatch Engine will depend on the 
- Operating System, which therefore is not specified in this document. However, 
- a description of packets criteria and admission rules is provided in the SCHC 
- profile, which is used by the Dispatch Engine to determine how to route 
- packets.
+The exact implementation details of the Dispatch Engine will depend on the 
+  Operating System, which therefore is not specified in this document. However,
+  a description of packets criteria and admission rules is provided in the SCHC 
+  profile, which is used by the Dispatch Engine to determine how to route 
+  packets.
 
 ~~~~~~~
                    Endpoint
@@ -1052,22 +1096,22 @@ In this case, the Dispatch Engine is a separate component that
 ~~~~~~~
 
 In the example above, the Dispatch Engine is implemented as a filter that 
- intercepts packets based on their UDP destination port. In this instance, it 
- routes packets with a destination port of 5768 to the SCHC Instance for CoAP 
- over UDP over IPv6. The Dispatch Engine then compresses the CoAP, UDP, and IPv6
- headers, adds a MPLS header with appropriate tag and sends the compressed 
- packet over the network.
+  intercepts packets based on their UDP destination port. In this instance, it 
+  routes packets with a destination port of 5768 to the SCHC Instance for CoAP 
+  over UDP over IPv6. The Dispatch Engine then compresses the CoAP, UDP, and
+  IPv6 headers, adds a MPLS header with appropriate tag and sends the compressed 
+  packet over the network.
 
 When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS 
- label and routes matching packets (MPLS label == 0xabcd0180 && UDP destination 
- port == 5768) them to the appropriate SCHC Instance based on the defined 
- admission rules in the profile.
+  label and routes matching packets (MPLS label == 0xabcd0180 && UDP destination 
+  port == 5768) them to the appropriate SCHC Instance based on the defined 
+  admission rules in the profile.
 
 
 ### Context Management {#sec-context-management}
 
 Context management is responsible for maintaining the shared state between
- SCHC entities. This includes:
+  SCHC entities. This includes:
 
 * Context synchronization between entities
 * Rule lifecycle management
@@ -1076,13 +1120,13 @@ Context management is responsible for maintaining the shared state between
 ### Context Repository {#sec-context-repository}
 
 A Context Repository provides centralized storage and management of SCHC
- contexts and profiles. While not mandatory for minimal deployments, it
- becomes essential for larger deployments requiring centralized management.
+  contexts and profiles. While not mandatory for minimal deployments, it
+  becomes essential for larger deployments requiring centralized management.
 
 ### Management Interface {#sec-management-interface}
 
 A Management Interface provides operational control and monitoring
- capabilities for SCHC deployments. This may include:
+  capabilities for SCHC deployments. This may include:
 
 * Configuration management
 * Performance monitoring
@@ -1103,12 +1147,10 @@ This document has no IANA actions.
 # Acknowledgments
 
 The authors would like to thank the SCHC Working Group for their
-contributions and feedback on this document.
+  contributions and feedback on this document.
 
 
 # Bits and pieces
-
-
 
 ~~~~~~~~
                     Endpoint 
@@ -1212,7 +1254,7 @@ a | | i  +-------------+ |  +-------------+  | +----------+  n | | a
 c | | o                  |  +-------------+  |               t | | c 
 e | | n                  +--| Endpoints   |--+                 | | e 
   +-+                       |   Registry  |                    +-+   
-   |                        +-------------+                     |             
+   |                        +-------------+                     |    
    |                                                            |    
    +------------------------------------------------------------+    
 ~~~~~~~~
