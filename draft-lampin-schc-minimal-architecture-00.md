@@ -67,6 +67,21 @@ author:
         code: 35576
         country: France
         email: laurent.toutain@imt-atlantique.fr
+      -
+        ins: P. Thubert
+        name: Pascal Thubert
+        city: Roquefort-les-Pins
+        code: 06330
+        state: France
+        email: pascal.thubert@gmail.com
+      -
+        ins: A. Minaburo
+        name: Ana Minaburo
+        org: Consultant 
+        city: Cesson-Sévigné
+        code: 35510
+        country: France
+        email: anaminaburo@gmail.com
 
 normative:
   RFC8724:
@@ -132,7 +147,7 @@ The SCHC Working Group has developed the {{RFC8724}} SCHC technology for
   Low-Power Wide-Area (LPWA) networks, providing efficient header compression
   and fragmentation mechanisms. As SCHC adoption expands beyond its original 
   scope, there is a need to define a minimal architecture that identifies only 
-  the essential elements required for proper SCHC operation. This documents does
+  the essential elements required for proper SCHC operation. This document does
   not aim to replace the SCHC architecture defined in {{DRAFT-ARCH}}, but rather
   to investigate the minimal set of components and their relationships that are
   necessary for SCHC to function effectively in various deployment scenarios.
@@ -661,24 +676,33 @@ An `Endpoint` is a network host capable of compressing and decompressing headers
   `Instances`, each with its own `Context` and `Profile`.
 
 ~~~~~~~~
-        retrieve,
-      synchronize  +------------+
-     + - - - - - - |  Endpoint  |
-     |   +---------|  Manager   |
-         |         +------------+
-     |   |              | manages       
-         |              | lifecycle     
-+------------+          | of Instances  
-| Context C1 |     +-------------+                     
-| Profile P1 |-----| Instance I1 |                     
-+------------+     +-------------+    +------------+
-    ...                 ...           | Dispatcher |
-+------------+     +-------------+    +------------+
-| Context Ck |-----| Instance Ik |                  
-| Profile Pk |     +-------------+                     
-+------------+         
-
-
+        retrieves,
+      synchronizes +------------+
+        contexts   |  Endpoint  |     retrieves, synchronizes
+         +---------|  Manager   |-------------+-----------------+
+         |         +------------+             |                 |
+         |            | manages               v                 v
+         |            | lifecycle       +------------+   +------------+
+         |            | of Instances    | Profile P1 |   | Context Pk |
+         v            v                 +------------+   +------------+
+                                        configures |        | configures
+                                                   |        |
+                             compresses, returns   +-----+  |
+                            +------------------------+   |  |
+                            |                        |   |  |
++------------+  +-------------+                      |   |  |
+| Context C1 |--| Instance I1 |<--+                  v   v  v
++------------+  +-------------+   |           +---------------+
+    ...                 ...       +<----------|  Dispatcher   |----+
+    ...                 ...       |     |     +---------------+    |
++------------+  +-------------+   |  dispatch   ^  |               |
+| Context Ck |--| Instance Ik |<--+  packets  - | reinject  configures
++------------+  +-------------+                 |  |               |
+                                                |  v               v
+                                    +-------------------------------+
+                                    |            OS/firmware        |
+                                    |           network stack       |
+                                    +-------------------------------+
 ~~~~~~~~
 
 
