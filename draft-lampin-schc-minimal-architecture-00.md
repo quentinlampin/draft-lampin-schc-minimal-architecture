@@ -143,7 +143,7 @@ This document investigates the requirements of a minimal architecture for the
 
 # Introduction        
 
-The SCHC Working Group has developed the {{RFC8724}} SCHC technology for 
+The SCHC Working Group has developed the {{RFC8724}} SCHC protocol for 
   Low-Power Wide-Area (LPWA) networks, providing efficient header compression
   and fragmentation mechanisms. As SCHC adoption expands beyond its original 
   scope, there is a need to define a minimal architecture that identifies only 
