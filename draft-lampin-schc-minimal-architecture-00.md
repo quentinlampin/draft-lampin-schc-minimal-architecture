@@ -74,14 +74,6 @@ author:
         code: 06330
         state: France
         email: pascal.thubert@gmail.com
-      -
-        ins: A. Minaburo
-        name: Ana Minaburo
-        org: Consultant 
-        city: Cesson-Sévigné
-        code: 35510
-        country: France
-        email: anaminaburo@gmail.com
 
 normative:
   RFC8724:
