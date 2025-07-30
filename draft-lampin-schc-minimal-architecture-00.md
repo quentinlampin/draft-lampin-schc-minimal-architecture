@@ -2,7 +2,7 @@
 title: SCHC Minimal Architecture
 # abbrev: SCHC-Min-Arch
 docname: draft-lampin-schc-minimal-architecture-00
-date: 2025-07-25
+date: 2025-07-30
 
 
 # stand_alone: true
@@ -72,7 +72,7 @@ author:
         name: Pascal Thubert
         city: Roquefort-les-Pins
         code: 06330
-        state: France
+        country: France
         email: pascal.thubert@gmail.com
 
 normative:
@@ -529,6 +529,22 @@ This new scenario introduces the following challenges:
   allowing the `Domain Manager` to update the `Context` of a specific
   `Instance`.
 
+### Discussions
+
+**Dispatcher and Discriminator** In {{DRAFT-ARCH}}, the authors introduce
+  the concept of a `Discriminator` that is used to identify the `Instance` or
+  `Context` that must be used to decompress a packet. As explained in the 
+  document, the `Discriminator` is a criterion that is used to select the 
+  appropriate `Instance` or `Context` for decompression.
+
+The `Dispatcher` is different from the `Discriminator` in that it is the
+  functional unit responsible for routing packets to the correct `Instance` 
+  based on:
+
+  - the `Discriminator` value for decompression and reassembly.
+  - the `Matching Operators` and `Target Values` of the `Contextes` for 
+   compression and fragmentation.
+
 ## Heterogeneous Endpoints
 
 This additional scenario introduces heterogeneous `Endpoints` that feature
@@ -671,19 +687,19 @@ An `Endpoint` is a network host capable of compressing and decompressing headers
         retrieves,
       synchronizes +------------+
         contexts   |  Endpoint  |     retrieves, synchronizes
-         +---------|  Manager   |-------------+-----------------+
-         |         +------------+             |                 |
-         |            | manages               v                 v
-         |            | lifecycle       +------------+   +------------+
-         |            | of Instances    | Profile P1 |   | Context Pk |
-         v            v                 +------------+   +------------+
-                                        configures |        | configures
-                                                   |        |
-                             compresses, returns   +-----+  |
-                            +------------------------+   |  |
-                            |                        |   |  |
-+------------+  +-------------+                      |   |  |
-| Context C1 |--| Instance I1 |<--+                  v   v  v
+         +---------|  Manager   |-------------+---------------+
+         |         +------------+             |               |
+         |            | manages               v               v
+         |            | lifecycle       +------------+  +------------+
+         |            | of Instances    | Profile P1 |  | Context Pk |
+         |            |                 +------------+  +------------+
+         |            |                 configures |       |configures
+         |            |                            |       |
+         |            |   compresses, decompresses +-----+ |
+         |            |     +------------------------+   | |
+         v            v     | fragments, reassembles |   | |
++------------+  +-------------+                      |   | |
+| Context C1 |--| Instance I1 |<--+                  v   v v
 +------------+  +-------------+   |           +---------------+
     ...                 ...       +<----------|  Dispatcher   |----+
     ...                 ...       |     |     +---------------+    |
@@ -698,47 +714,12 @@ An `Endpoint` is a network host capable of compressing and decompressing headers
 ~~~~~~~~
 
 
-
-
-
 ### Instance
 
 An `Instance` is the fundamental component that implements the SCHC protocol
   as defined in {{RFC8724}}. An `Endpoint` MAY execute several `Instances` in 
   its protocol stack. Each `Instance` operates independently, with its own 
   context and profile. 
-
-A functional architecture of a SCHC Instance is proposed in the following 
-  figure:
-
-~~~~~~~~
-+-------------------------------------------------------------+
-|                     SCHC Instance                           |
-+-------------------------------------------------------------+
-|                                                             |
-|  +----------------------+    +-------------------------+    |
-|  |      C/D Engine      |    |      F/R Engine         |    |
-|  |                      |    |                         |    |
-|  | - compress(buffer)   |    | - fragment(datagram)    |    |
-|  | - decompress(buffer) |    | - reassemble(fragments) |    |
-|  +----------------------+    +-------------------------+    |
-|                                                             |
-|                                                             |
-|  +-----------------------------------------------------+    |
-|  |                   Configuration                     |    |
-|  +-----------------------------------------------------+    |
-|  |   +-------------------+    +-------------------+    |    |
-|  |   |      Profile      |    |     Context       |    |    |
-|  |   |                   |    |                   |    |    |
-|  |   | - Dispatch        |    | - Set of Rules    |    |    |
-|  |   |   configuration   |    |   (SoR)           |    |    |
-|  |   | - matching policy |    | - parser ID       |    |    |
-|  |   | - device-specific |    |                   |    |    |
-|  |   |   configuration   |    |                   |    |    |
-|  |   +-------------------+    +-------------------+    |    |
-|  +-----------------------------------------------------+    |
-+-------------------------------------------------------------+
-~~~~~~~~
 
 A SCHC Instance MUST implement the following components:
 
@@ -756,9 +737,9 @@ Its configuration MUST include:
 
 A SCHC Instance MAY implement:
 
-* Fragmentation and Reassembly (F/R) functionality
-* Dynamic context update mechanisms
-* Performance monitoring and reporting
+* Fragmentation and Reassembly (F/R) functionality.
+* Dynamic context update mechanisms.
+* Performance monitoring and reporting.
 
 #### Header Compression and Decompression (C/D) engine
 
@@ -829,29 +810,24 @@ The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC
   and `Context` synchronization.
 
 ~~~~~~~~
-+-------------------------------------------------------------------+
-|                             SCHC Domain                           |
-+-------------------------------------------------------------------+
-|                                                                   |
-|                   +----------------------------+                  |
-|                   |       Domain Manager       |                  |
-|                   +----------------------------+                  |
-|                   |                            |                  |
-|                   | +----------+  +----------+ |                  |
-|                   | | Endpoint |  |  Context | |                  |
-|           +-------+>|  Manager |  |  Manager | |                  |
-|           |       | +----------+  +----------+ |                  |
-|           |       +--------------------+-------+                  |
-|  Register |                            |                          |
-|  Endpoint |   +------------------------+                          |
-|           |   |  synchronize Context                              |
-|           v   v                                                   |
-|  +-----------------+   +------------------+   +----------------+  |
-|  |    Endpoint A   |   |    Endpoint B    |   |   Endpoint ... |  |
-|  +-----------------+   +------------------+   +----------------+  |
-|                                                                   |
-|                                                                   |
-+-------------------------------------------------------------------+
+                                   
+                           Domain Manager                         
+                   +----------------------------+                 
+                   |                            |                 
+                   | +----------+  +----------+ |                 
+                   | | Endpoint |  |  Context | |                 
+           +-------+>|  Manager |  |  Manager | |                 
+           |       | +----------+  +----------+ |                 
+           |       +--------------------+-------+                 
+  Register |                            |                         
+  Endpoint |   +------------------------+                         
+           |   |  synchronize Context(es)                         
+           v   v                                                  
+  +-----------------+   +------------------+   +----------------+ 
+  |    Endpoint A   |   |    Endpoint B    |   |   Endpoint ... | 
+  +-----------------+   +------------------+   +----------------+ 
+                                                                  
+                                                                  
 ~~~~~~~~
 
 SCHC Domain, different illutration.
@@ -890,9 +866,10 @@ The Dispatcher is a key component that enables the coexistence of multiple
  allows regular traffic to coexist with SCHC-compressed traffic.
 
 Dispatcher is illustrated in the figure below, where two SCHC `Instances`
- are running on the same `Endpoint`. The Dispatcher is responsible for routing
- packets to the appropriate `Instance` based on the filter chains defined in
- each `Profile`.
+  are running on the same `Endpoint`. The Dispatcher is responsible for routing
+  packets to the appropriate `Instance` based on admission criteria defined in
+  the `Profiles` and the `Contexts`.
+
 
 ~~~~~~~~
                                reinject
@@ -923,205 +900,26 @@ Dispatcher is illustrated in the figure below, where two SCHC `Instances`
 
 ~~~~~~~~
 
-Below is a description of the Dispatcher components and their interfaces:
+There are two types of admission criteria that are used by the Dispatcher:
 
-~~~~~~~~
+1. `Discriminator` values for decompression and reassembly. Those criteria
+   are used to identify packets that should be decompressed and reassembled by
+   SCHC. The `Discriminator` is a value that is either included in the packet, 
+   such as a field in the packet headers (MPLS label, UDP port) or is derived 
+   from the metadata associated with the packet, such as the Network Interface 
+   ID, as described in {{DRAFT-ARCH}}.
 
-+---------------------------------------------------------------------+
-|                           Dispatcher                                |
-+---------------------------------------------------------------------+
-|                                                                     |
-|  +-------------------------------------------------------------+    |
-|  |                     Dispatch Engine                         |    |
-|  |                                                             |    |
-|  | - register_compression_cb(schc_instance, admission_rules)   |    |
-|  | - register_decompression_cb(schc_instance, admission_rules) |    |
-|  |                                                             |    |
-|  +-------------------------------------------------------------+    |
-|                                                                     |
-|  +-------------------------------------------------------------+    |
-|  |                     Configuration                           |    |
-|  +-------------------------------------------------------------+    |
-|  |                                                             |    |
-|  | - compression_callbacks: [                                  |    |
-|  |     (schc_instance1, c_admission_rules_1),                  |    |
-|  |     (schc_instance2, c_admission_rules_2),                  |    |
-|  |     ...                                                     |    |
-|  |   ]                                                         |    |
-|  | - decompression_callbacks: [                                |    |
-|  |     (schc_instance1, admission_rules_1),                    |    |
-|  |     (schc_instance2, admission_rules_2),                    |    |
-|  |   ...                                                       |    |
-|  |   ]                                                         |    |
-|  +-------------------------------------------------------------+    |
-+---------------------------------------------------------------------+
+2. `Matching Operators` and `Target Values` of the `Contexts` for compression
+   and fragmentation. Those criteria are used to identify packets that should be
+   compressed and fragmented by SCHC. The `Matching Operators` and `Target
+   Values` are defined in the SCHC `Contexts` and are used to match specific
+   header fields or values in the packet headers. The `Dispatcher` uses these
+   criteria to determine whether a packet should be compressed or fragmented by
+   a given `Instance`.
 
-~~~~~~~~
+**TODO: LINK between discriminator, MO/TV and filter chains.**
+**What follows is WIP, needs to be completed.**
 
-The Dispatcher MUST implement the following interface:
-- `register_compression_hook(admission_rules)`:
-  registers a compression hook with the Dispatch Engine, which is used to 
-  identify packets that should be compressed by SCHC. The admission rules 
-  define the criteria for packet selection, such as specific header fields or 
-  values.
-- `register_decompression_hook(admission_rules)`:
-  registers a decompression hook with the Dispatch Engine, which is used to 
-  identify packets that should be decompressed by SCHC. The admission rules 
-  define the criteria for packet selection, such as specific header fields or 
-  values.
-
-
-**Dispatch scenarios**:
-
-#### Case 1: The Dispatch Engine is integrated into the network stack and a single SCHC Instance is used.
-  
-~~~~~~
-          Endpoint 1                          Endpoint 2    
-+-------------+-------------+       +-------------+-------------+
-|   App. A    |    App. B   |       |   App. A    |    App. B   |   
-+-------------+-------------+       +-------------+-------------+   
-|    HTTP     |     CoAP    |       |    HTTP     |     CoAP    |   
-+-------------+-------------+       +-------------+-------------+   
-|  QUIC/UDP   |     UDP     |       |  QUIC/UDP   |     UDP     |      
-+-------------+-------------+       +-------------+-------------+
-|            IPv6           |       |            IPv6           |   
-+-----+-------+-------------+       +-------------+-------------+
-|    ^           ^      |   |       |    ^           ^      |   |
-|    |  Dispatch |  UDP Dest|       |    |  Dispatch |  UDP Src |
-|    |   Engine  | Port 5678|       |    |   Engine  | Port 5678|
-|    |           |      |   |       |    |           |      |   |   
-+----+-----------+------+---+       +----+-----------+----------+
-    IPv6         |     IPv6             IPv6         |     IPv6    
-  datagram       |   datagram         datagram       |   datagram
-     | +---------+------+-----+          | +---------+------+-----+
-     | |     SCHC Instance    |          | |     SCHC Instance    |
-     | +---------+------+-----+          | +---------+------+-----+
-     | |         |      |     |          | |         |      |     |
-     | |+------------+  |     |          | |+------------+  |     |
-     | || SCHC Inst. |  |     |          | || SCHC Inst. |  |     |
-     | || Decompress.|  |     |          | || Decompress.|  |     |
-     | |+------------+  V     |          | |+------------+  V     |
-     | |    ^  +------------+ |          | |    ^  +------------+ |
-     | |    |  | SCHC Inst. | |          | |    |  | SCHC Inst. | |
-     | |    |  | Compress.  | |          | |    |  | Compress.  | |
-     | |    |  +------------+ |          | |    |  +------------+ |
-     | |    |        |        |          | |    |        |        |
-     | +----+--------+--------+          | +----+--------+--------+
-     |     SCHC     SCHC                 |     SCHC     SCHC 
-     |    Packet   packet                |    Packet   packet
-     |      |        |                   |      |        |
-     v      |        V                   V      |        V    
-+---------------------------+       +---------------------------+   
-|       Ethertype Ethertype |       |       Ethertype Ethertype |
-|         == SCHC  := SCHC  |       |         == SCHC  := SCHC  |
-|                           |       |                           |
-| Link layer, e.g. Ethernet |       | Link layer, e.g. Ethernet |   
-+---------------------------+       +---------------------------+   
-|  Network Interface Card   |       |  Network Interface Card   |    
-+---------------------------+       +---------------------------+   
-|       Physical Layer      |       |       Physical Layer      |   
-+---------------------------+       +---------------------------+   
-            | |                                  | |
-            | |                                  | |
-            | +----------------------------------+ |
-            +--------------------------------------+
-              
-~~~~~~
-
-In this simple scenario, the Dispatch Engine is integrated into
-  the network stack and there is a unique predefined SCHC Instance for a 
-  specific protocol stack, such as CoAP over UDP over IPv6. This is the classic 
-  case for SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}}, 
-  {{RFC9363}}.
-
-The dispatching is done based on a identified header field, such as the an 
-  ethertype, the IPv6 Next Header field, a specific UDP port, etc.
- 
-This implementation scenario therefore assumes that the endpoint Operating 
-  System (OS) implements the SCHC protocol as part of its network stack and that 
-  SCHC is allocated the appropriate ethertype, IPv6 Next Header value or UDP 
-  port from IANA.
-
-In the example above, 
-
-* On Endpoint 1, the Dispatch "intercepts" outbound packets whose UDP 
-  destination port is 5678, which is used by CoAP. It then routes these packets 
-  to the SCHC Instance for CoAP over UDP over IPv6. The SCHC instance 
-  then compresses the CoAP, UDP and IPv6 headers, and calls the Link Layer
-  interface to send the compressed packet over the network, setting the
-  appropriate SCHC ethertype in the link layer header.
-
-* On Endpoint 2, incoming packets whose SCHC ethertype is set to the SCHC value
-  are routed to the SCHC Instance for CoAP over UDP over IPv6. The SCHC Instance
-  decompresses the SCHC packets and delivers them to the IPv6 layer.
-
-Note that in this example, regular HTTP over QUIC traffic is also present on the
-  same Endpoint. The Dispatch Engine is able to discriminate those packets from 
-  packets that are compressed by SCHC, as the HTTP over QUIC packets do not
-  not match the admission rules defined in the SCHC profile, here
-  `UDP Destination Port == 5678`.
-
-
-#### Case 2: The Dispatch engine lives outside of the network stack.
-
-In this case, the Dispatch Engine is a separate component that
-  interacts with multiple SCHC Instances. It is responsible for routing packets
-  to the appropriate SCHC Instance based on the packet type and supplied
-  admission rules. 
-
- - On Linux, this can be implemented using netfilter hooks or similar mechanisms
-  to intercept packets and route them to and from the appropriate SCHC Instance.
-
- - On macOS, the Dispatch Engine can be implemented as a kernel extension or 
-  user-space application that make use of PF, the native packet filter.
-
-The exact implementation details of the Dispatch Engine will depend on the 
-  Operating System, which therefore is not specified in this document. However,
-  a description of packets criteria and admission rules is provided in the SCHC 
-  profile, which is used by the Dispatch Engine to determine how to route 
-  packets.
-
-~~~~~~~
-                   Endpoint
-+------------------------------------------+
-|   App. A     |    App. B   |    App. C   |
-+--------------+-------------+-------------+
-|     QUIC     |     CoAP    |     HTTP    |
-+--------------|-------------+-------------|
-|   Dispatch      Dispatch   |             |         Hooks
-|    Hook 1    .   Hook 3    |             +           |
-|  (dport 443)  (dport 5768) |             |           |
-|              .             |             |  +------------------+
-|             UDP            |     TCP     |  | Dispatch Engine  |
-+----------------------------+-------------+  +------------------+
-|             IPv6           |     IPv4    |   1 .  . 2
-+----------------------------+-------------+     .  .
-|  Dispatch    .   Dispatch  |             | +------------+ 
-|   Hook 2          Hook 4   |             | |SCHC Inst.#1|
-|   label      .    label    |             | +------------+
-| 0xabcd0180      0xabce0180 |             | |   .     .  |
-|                            |             | |   v     .  |
-|             MPLS           |             | |compress .  |
-+----------------------------+             | |         v  |
-|          Ethertype                       | |  decompress|
-|              ==                          | +------------+
-|            0x8847                        |
-|                  Ethernet                |
-+------------------------------------------+
-
-~~~~~~~
-
-In the example above, the Dispatch Engine is implemented as a filter that 
-  intercepts packets based on their UDP destination port. In this instance, it 
-  routes packets with a destination port of 5768 to the SCHC Instance for CoAP 
-  over UDP over IPv6. The Dispatch Engine then compresses the CoAP, UDP, and
-  IPv6 headers, adds a MPLS header with appropriate tag and sends the compressed 
-  packet over the network.
-
-When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS 
-  label and routes matching packets (MPLS label == 0xabcd0180 && UDP destination 
-  port == 5768) them to the appropriate SCHC Instance based on the defined 
-  admission rules in the profile.
 
 
 ### Context Management {#sec-context-management}
@@ -1274,6 +1072,160 @@ e | | n                  +--| Endpoints   |--+                 | | e
    |                                                            |    
    +------------------------------------------------------------+    
 ~~~~~~~~
+
+**Dispatch scenarios**:
+
+Case 1: The Dispatch Engine is integrated into the network stack and a single SCHC Instance is used.
+  
+~~~~~~
+          Endpoint 1                          Endpoint 2    
++-------------+-------------+       +-------------+-------------+
+|   App. A    |    App. B   |       |   App. A    |    App. B   |   
++-------------+-------------+       +-------------+-------------+   
+|    HTTP     |     CoAP    |       |    HTTP     |     CoAP    |   
++-------------+-------------+       +-------------+-------------+   
+|  QUIC/UDP   |     UDP     |       |  QUIC/UDP   |     UDP     |      
++-------------+-------------+       +-------------+-------------+
+|            IPv6           |       |            IPv6           |   
++-----+-------+-------------+       +-------------+-------------+
+|    ^           ^      |   |       |    ^           ^      |   |
+|    |  Dispatch |  UDP Dest|       |    |  Dispatch |  UDP Src |
+|    |   Engine  | Port 5678|       |    |   Engine  | Port 5678|
+|    |           |      |   |       |    |           |      |   |   
++----+-----------+------+---+       +----+-----------+----------+
+    IPv6         |     IPv6             IPv6         |     IPv6    
+  datagram       |   datagram         datagram       |   datagram
+     | +---------+------+-----+          | +---------+------+-----+
+     | |     SCHC Instance    |          | |     SCHC Instance    |
+     | +---------+------+-----+          | +---------+------+-----+
+     | |         |      |     |          | |         |      |     |
+     | |+------------+  |     |          | |+------------+  |     |
+     | || SCHC Inst. |  |     |          | || SCHC Inst. |  |     |
+     | || Decompress.|  |     |          | || Decompress.|  |     |
+     | |+------------+  V     |          | |+------------+  V     |
+     | |    ^  +------------+ |          | |    ^  +------------+ |
+     | |    |  | SCHC Inst. | |          | |    |  | SCHC Inst. | |
+     | |    |  | Compress.  | |          | |    |  | Compress.  | |
+     | |    |  +------------+ |          | |    |  +------------+ |
+     | |    |        |        |          | |    |        |        |
+     | +----+--------+--------+          | +----+--------+--------+
+     |     SCHC     SCHC                 |     SCHC     SCHC 
+     |    Packet   packet                |    Packet   packet
+     |      |        |                   |      |        |
+     v      |        V                   V      |        V    
++---------------------------+       +---------------------------+   
+|       Ethertype Ethertype |       |       Ethertype Ethertype |
+|         == SCHC  := SCHC  |       |         == SCHC  := SCHC  |
+|                           |       |                           |
+| Link layer, e.g. Ethernet |       | Link layer, e.g. Ethernet |   
++---------------------------+       +---------------------------+   
+|  Network Interface Card   |       |  Network Interface Card   |    
++---------------------------+       +---------------------------+   
+|       Physical Layer      |       |       Physical Layer      |   
++---------------------------+       +---------------------------+   
+            | |                                  | |
+            | |                                  | |
+            | +----------------------------------+ |
+            +--------------------------------------+
+              
+~~~~~~
+
+In this simple scenario, the Dispatch Engine is integrated into
+  the network stack and there is a unique predefined SCHC Instance for a 
+  specific protocol stack, such as CoAP over UDP over IPv6. This is the classic 
+  case for SCHC over LPWAN networks, as described in {{RFC8724}}, {{RFC8824}}, 
+  {{RFC9363}}.
+
+The dispatching is done based on a identified header field, such as the an 
+  ethertype, the IPv6 Next Header field, a specific UDP port, etc.
+ 
+This implementation scenario therefore assumes that the endpoint Operating 
+  System (OS) implements the SCHC protocol as part of its network stack and that 
+  SCHC is allocated the appropriate ethertype, IPv6 Next Header value or UDP 
+  port from IANA.
+
+In the example above, 
+
+* On Endpoint 1, the Dispatch "intercepts" outbound packets whose UDP 
+  destination port is 5678, which is used by CoAP. It then routes these packets 
+  to the SCHC Instance for CoAP over UDP over IPv6. The SCHC instance 
+  then compresses the CoAP, UDP and IPv6 headers, and calls the Link Layer
+  interface to send the compressed packet over the network, setting the
+  appropriate SCHC ethertype in the link layer header.
+
+* On Endpoint 2, incoming packets whose SCHC ethertype is set to the SCHC value
+  are routed to the SCHC Instance for CoAP over UDP over IPv6. The SCHC Instance
+  decompresses the SCHC packets and delivers them to the IPv6 layer.
+
+Note that in this example, regular HTTP over QUIC traffic is also present on the
+  same Endpoint. The Dispatch Engine is able to discriminate those packets from 
+  packets that are compressed by SCHC, as the HTTP over QUIC packets do not
+  not match the admission rules defined in the SCHC profile, here
+  `UDP Destination Port == 5678`.
+
+
+Case 2: The Dispatch engine lives outside of the network stack.
+
+In this case, the Dispatch Engine is a separate component that
+  interacts with multiple SCHC Instances. It is responsible for routing packets
+  to the appropriate SCHC Instance based on the packet type and supplied
+  admission rules. 
+
+ - On Linux, this can be implemented using netfilter hooks or similar mechanisms
+  to intercept packets and route them to and from the appropriate SCHC Instance.
+
+ - On macOS, the Dispatch Engine can be implemented as a kernel extension or 
+  user-space application that make use of PF, the native packet filter.
+
+The exact implementation details of the Dispatch Engine will depend on the 
+  Operating System, which therefore is not specified in this document. However,
+  a description of packets criteria and admission rules is provided in the SCHC 
+  profile, which is used by the Dispatch Engine to determine how to route 
+  packets.
+
+~~~~~~~
+                   Endpoint
++------------------------------------------+
+|   App. A     |    App. B   |    App. C   |
++--------------+-------------+-------------+
+|     QUIC     |     CoAP    |     HTTP    |
++--------------|-------------+-------------|
+|   Dispatch      Dispatch   |             |         Hooks
+|    Hook 1    .   Hook 3    |             +           |
+|  (dport 443)  (dport 5768) |             |           |
+|              .             |             |  +------------------+
+|             UDP            |     TCP     |  | Dispatch Engine  |
++----------------------------+-------------+  +------------------+
+|             IPv6           |     IPv4    |   1 .  . 2
++----------------------------+-------------+     .  .
+|  Dispatch    .   Dispatch  |             | +------------+ 
+|   Hook 2          Hook 4   |             | |SCHC Inst.#1|
+|   label      .    label    |             | +------------+
+| 0xabcd0180      0xabce0180 |             | |   .     .  |
+|                            |             | |   v     .  |
+|             MPLS           |             | |compress .  |
++----------------------------+             | |         v  |
+|          Ethertype                       | |  decompress|
+|              ==                          | +------------+
+|            0x8847                        |
+|                  Ethernet                |
++------------------------------------------+
+
+~~~~~~~
+
+In the example above, the Dispatch Engine is implemented as a filter that 
+  intercepts packets based on their UDP destination port. In this instance, it 
+  routes packets with a destination port of 5768 to the SCHC Instance for CoAP 
+  over UDP over IPv6. The Dispatch Engine then compresses the CoAP, UDP, and
+  IPv6 headers, adds a MPLS header with appropriate tag and sends the compressed 
+  packet over the network.
+
+When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS 
+  label and routes matching packets (MPLS label == 0xabcd0180 && UDP destination 
+  port == 5768) them to the appropriate SCHC Instance based on the defined 
+  admission rules in the profile.
+
+
 
 --- back
 
