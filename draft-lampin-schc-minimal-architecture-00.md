@@ -204,7 +204,7 @@ In the following, terms used in the terminology are assumed to be defined in the
   `Contexts` used by its `Domain`.
 
 
-# Minimal Architecture Components
+# Minimal Architecture Components, a case study & discussions
 
 In this section, we investigate the minimal components required for SCHC 
   operation in the context of typical deployment scenarios. 
@@ -265,7 +265,6 @@ In this simplistic scenario, which is representative of some LPWAN deployments,
   two `Instances`. This communication session is referred to as a `Session`.
 
 
-### Discussions
 
 **Why `Instance`?** Here we use the term `Instance` to refer to the SCHC 
  protocol routine that is running on each endpoint. This is different from the 
@@ -389,8 +388,6 @@ In this typical IoT deployment scenario, the requirements for the minimal
   the `Domain`, referred to as the `Domain Manager`.
 
 
-### Discussions
-
 **Why synchronize the `Contexts` of A and C?** Synchronizing the `Contexts` of 
   Endpoint A and Endpoint C is desirable. This reduces the complexity of 
   managing multiple `Contexts` at Endpoint B and eventually reduces the size the
@@ -479,6 +476,7 @@ Then comes the spring, and the temperature and thermostat setpoints change.
             |  Endpoint A  |  |  Endpoint B  |  |  Endpoint C  |
             +--------------+  +--------------+  +--------------+
 ~~~~~~~
+
 
 This scenario highlights the need for a dynamic context update mechanism that
   allows the `Domain Manager` to update the `Context` of all `Instances`
@@ -577,7 +575,6 @@ This new scenario introduces the following challenges:
   each `Instance` or `Context` must be uniquely identifiable to allow the
   `Domain Manager` to update the `Context` of a specific `Instance`.
 
-### Discussions
 
 **Dispatcher and Discriminator** In {{DRAFT-ARCH}}, the authors introduce
   the concept of a `Discriminator` that is used to identify the `Instance` or
