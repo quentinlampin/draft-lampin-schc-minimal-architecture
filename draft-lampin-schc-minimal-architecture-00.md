@@ -1011,6 +1011,10 @@ The authors would like to thank the SCHC Working Group for their
 
 # Bits and pieces
 
+**THIS SECTION IS NOT PART OF THE DOCUMENT, IT IS A COLLECTION OF IDEAS, CONCEPTS 
+  AND ILLUSTRATIONS THAT ARE NOT YET FULLY DEVELOPED OR INTEGRATED INTO THE
+  DOCUMENT. IT IS PROVIDED FOR REFERENCE AND DISCUSSION PURPOSES ONLY.**
+
 ~~~~~~~~
                     Endpoint 
 +------------------------------------------------+
