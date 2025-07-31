@@ -49,31 +49,31 @@ author:
         code: 38240
         country: France
         email: philippe.surbayrole@orange.com
-      -
-        ins: A. Pelov
-        name: Alexander Pelov
-        org: IMT Atlantique
-        street: 2 Rue de la Chataigneraie
-        city: Cesson-Sévigné
-        code: 35576
-        country: France
-        email: alexander.pelov@imt-atlantique.fr
-      -
-        ins: L. Toutain
-        name: Laurent Toutain
-        org: IMT Atlantique
-        street: 2 Rue de la Chataigneraie
-        city: Cesson-Sévigné
-        code: 35576
-        country: France
-        email: laurent.toutain@imt-atlantique.fr
-      -
-        ins: P. Thubert
-        name: Pascal Thubert
-        city: Roquefort-les-Pins
-        code: 06330
-        country: France
-        email: pascal.thubert@gmail.com
+      # -
+      #   ins: A. Pelov
+      #   name: Alexander Pelov
+      #   org: IMT Atlantique
+      #   street: 2 Rue de la Chataigneraie
+      #   city: Cesson-Sévigné
+      #   code: 35576
+      #   country: France
+      #   email: alexander.pelov@imt-atlantique.fr
+      # -
+      #   ins: L. Toutain
+      #   name: Laurent Toutain
+      #   org: IMT Atlantique
+      #   street: 2 Rue de la Chataigneraie
+      #   city: Cesson-Sévigné
+      #   code: 35576
+      #   country: France
+      #   email: laurent.toutain@imt-atlantique.fr
+      # -
+      #   ins: P. Thubert
+      #   name: Pascal Thubert
+      #   city: Roquefort-les-Pins
+      #   code: 06330
+      #   country: France
+      #   email: pascal.thubert@gmail.com
 
 normative:
   RFC8724:
