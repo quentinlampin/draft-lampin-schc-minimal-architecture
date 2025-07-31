@@ -246,9 +246,9 @@ In this scenario,
   received using the CoAP protocol over UDP over IPv6. 
 - The SCHC protocol is used to compress the CoAP, UDP, and IPv6
   headers before sending the packets over the LPWAN link layer. 
-- The SCHC protocol is implemented as a single SCHC `Instance` on each 
+- The SCHC protocol is implemented as a single `Instance` on each 
   `Endpoint`.
-- The SCHC `Instance` is hardwired into the protocol stack of each `Endpoint`, 
+- The `Instance` is hardwired into the protocol stack of each `Endpoint`,
   meaning that it is not dynamically loaded or unloaded.
 - All of the traffic is compressed and decompressed using those `Instances`.
 
@@ -278,25 +278,70 @@ The rationale for this terminology is that the term `Instance` is often used to
   protocol that is running on each endpoint.
 
 **Session vs Instance**: In this document, we use the term `Session` to refer to
-  a communication session between two (or more) SCHC Instances that are 
+  a communication session between two (or more) `Instances` that are 
   communicating with each other using SCHC, using the same `Context`. 
  
 The rationale for this is that the term `Session` is often used to refer to a 
   specific communication session between two endpoints and this definition 
-  extends this concept to all SCHC `Instances` that maintain a common context.
+  extends this concept to all `Instances` that maintain a common context.
 
+**Why not use the terminology of {{DRAFT-ARCH}}?** We believe that 
+  version -04 introduced changes in the terminology that are prone to confusion. 
+  In particular, the term `Instance` is defined as:
+
+  ```
+  SCHC Instance.  The **session** between SCHC end points in two or more
+      peer nodes operating SCHC to communicate using a common SoR and a
+      matching SoV.  There are 2 SCHC Instances or more involved per
+      SCHC stratum, one for the SCHC Stratum Header and one or more for
+      the SCHC payload, i.e., the SCHC-compressed data.
+  ```
+
+
+  while the end point is defined as:
+
+  ```
+  SCHC end point.  An entity (e.g., Device, Application and Network
+      Gateway) involved in the SCHC process.  Each SCHC end point will
+      have its Set of Rules (SoR), based on the profile, the protocols,
+      the device, the behaviour and a Set of Variables (SoV).
+  ```
+  
+  Those definitions are confusing as they do not clearly identify the components
+  which they are referring to. For example, the term `Instance` can be used to 
+  refer to session between two applications that are using SCHC, or to refer to 
+  two hardware devices that are using SCHC, etc.
+
+The proposed terminology in this document aims to clarify the definitions of the
+  architecture components by calling a session a `Session` and therefore reuses 
+  the term `Instance` to refer to the SCHC protocol routine that is running on 
+  an endpoint.
+
+This terminology is consistent with prior versions of the architecture document,
+  such as version -03, which had the following definitions:
+
+* SCHC Instance.  The different stages of SCHC in a host.  Each
+  instance will have its Set of Rules (SoR), based on the profile,
+  the protocols, the device, the behaviour and a Set of Variables
+  (SoV).  There are 2 SCHC Instances involved per SCHC stratum, one
+  for the SCHC header and one for the SCHC payload, i.e., the SCHC-
+  compressed data.
+
+*  SCHC Session.  The association of SCHC Instances in two or more
+  peer nodes operating SCHC to communicate using a common SoR and a
+  matching SoV.
 
 ## The three endpoints deployment scenario
 
 In this section, we consider a more complex deployment scenario where two or 
- more endpoints communicate with the same SCHC Instance/Endpoint. This scenario 
- is common in IoT deployments where multiple sensors or devices communicate with
- a central gateway or server using SCHC.
+  more endpoints communicate with the same SCHC Instance/Endpoint. This scenario
+  is common in IoT deployments where multiple sensors or devices communicate 
+  with a central gateway or server using SCHC.
 
  
 ~~~~~~~~
-+------------------+    +------------------+    +------------------+
-|    Endpoint A    |    |    Endpoint B    |    |    Endpoint C    |
+
+     Endpoint A              Endpoint B              Endpoint C     
 +------------------+    +------------------+    +------------------+
 |  Application A   |    |  Application B   |    |  Application A   |
 +------------------+    +------------------+    +------------------+
@@ -351,7 +396,7 @@ In this typical IoT deployment scenario, the requirements for the minimal
   managing multiple `Contexts` at Endpoint B and eventually reduces the size the
   Rules IDs, impacting the SCHC packet size.
 
-**Domain Manager, why introduce a new function?** In a first approach, the 
+**Domain Manager, why introduce a new entity?** In a first approach, the 
   `Domain Manager` could be implemented as a component of the `Instance` that is
   running on an `Endpoint`, here B. However, this would require distinguishing 
   between different types of `Instances`: those capable of managing other 
@@ -511,7 +556,7 @@ This new scenario introduces the following challenges:
 
 - **Datagram Dispatch**: The `Endpoint` must be able to dispatch packets to the
   appropriate `Instance` based on the protocol or application in use. This
-  requires an additional functional unit, the `Dispatcher`, that can identify
+  requires an additional functional entity, the `Dispatcher`, that can identify
   and dispatch packets to the correct `Instance` for compression and
   fragmentation. Conversely, the `Dispatcher` must also be able to route inbound
   compressed and fragmented packets to the correct `Instance` for decompression
@@ -521,13 +566,16 @@ This new scenario introduces the following challenges:
   `Instances` A1 and B1, while uncompressed HTTP/QUIC packets must be dispatched
   to `Instances` A2 and B2. Additionally, compressed CoAP/UDP packets must be
   dispatched to `Instances` A1 and B1, while compressed HTTP/QUIC packets must
-  be dispatched to `Instances` A2 and B2 for decompression. This challenge is
-  discussed specifically in section {{sec-dispatcher}}.
+  be dispatched to `Instances` A2 and B2 for decompression. The criteria for
+  dispatching compressed packets to the correct `Instance` is called the 
+  `Discriminator` in {{DRAFT-ARCH}}.
+
+  Those challenges are discussed further in section {{sec-dispatcher}}.
 
 - **Instance/Context Identification**: In addition to the need for a `Dispatch`
-  mechanism, each `Instance` or `Context` must be uniquely identifiable,
-  allowing the `Domain Manager` to update the `Context` of a specific
-  `Instance`.
+  mechanism, which addresses the routing of packets to the correct `Instance`,
+  each `Instance` or `Context` must be uniquely identifiable to allow the
+  `Domain Manager` to update the `Context` of a specific `Instance`.
 
 ### Discussions
 
@@ -721,7 +769,7 @@ An `Instance` is the fundamental component that implements the SCHC protocol
   its protocol stack. Each `Instance` operates independently, with its own 
   context and profile. 
 
-A SCHC Instance MUST implement the following components:
+An `Instance` MUST implement the following components:
 
 * Header Compression and Decompression (C/D) engine
 * Context Manager
