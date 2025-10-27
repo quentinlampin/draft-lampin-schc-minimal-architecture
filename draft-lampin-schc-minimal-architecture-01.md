@@ -1,8 +1,8 @@
 ---
 title: SCHC Minimal Architecture
 # abbrev: SCHC-Min-Arch
-docname: draft-lampin-schc-minimal-architecture-00
-date: 2025-07-30
+docname: draft-lampin-schc-minimal-architecture-01
+date: 2025-10-27
 
 
 # stand_alone: true
@@ -49,31 +49,6 @@ author:
         code: 38240
         country: France
         email: philippe.surbayrole@orange.com
-      # -
-      #   ins: A. Pelov
-      #   name: Alexander Pelov
-      #   org: IMT Atlantique
-      #   street: 2 Rue de la Chataigneraie
-      #   city: Cesson-Sévigné
-      #   code: 35576
-      #   country: France
-      #   email: alexander.pelov@imt-atlantique.fr
-      # -
-      #   ins: L. Toutain
-      #   name: Laurent Toutain
-      #   org: IMT Atlantique
-      #   street: 2 Rue de la Chataigneraie
-      #   city: Cesson-Sévigné
-      #   code: 35576
-      #   country: France
-      #   email: laurent.toutain@imt-atlantique.fr
-      # -
-      #   ins: P. Thubert
-      #   name: Pascal Thubert
-      #   city: Roquefort-les-Pins
-      #   code: 06330
-      #   country: France
-      #   email: pascal.thubert@gmail.com
 
 normative:
   RFC8724:
@@ -727,12 +702,12 @@ In both scenarios, a management protocol is required to enable the retrieval
   provides initial ideas on how to implement such a management protocol for SCHC
   in a Constrained Environment, e.g. IoT devices.
 
-## Core Components Illustrated
+# Core Components Illustrated
 
 This section provides an overview of the SCHC Core components their interactions
 and key functionalities and interfaces.
 
-### Endpoint
+## Endpoint
 
 An `Endpoint` is a network host capable of compressing and decompressing headers
   and optionally fragmenting and reassembling packets. It implements the SCHC
@@ -770,7 +745,7 @@ An `Endpoint` is a network host capable of compressing and decompressing headers
 ~~~~~~~~
 
 
-### Instance
+## Instance
 
 An `Instance` is the fundamental component that implements the SCHC protocol
   as defined in {{RFC8724}}. An `Endpoint` MAY execute several `Instances` in
@@ -797,7 +772,7 @@ A SCHC Instance MAY implement:
 * Dynamic context update mechanisms.
 * Performance monitoring and reporting.
 
-#### Header Compression and Decompression (C/D) engine
+### Header Compression and Decompression (C/D) engine
 
 This component is responsible for compressing and decompressing headers
  using the SCHC protocol, as described in {{RFC8724}}. It applies the rules
@@ -824,7 +799,7 @@ On decompression, the C/D engine:
 - applies the decompression rules to reconstruct the original header.
 - reconstructs the original packet from the decompressed header and payload.
 
-#### Fragmentation and Reassembly (F/R)
+### Fragmentation and Reassembly (F/R)
 
 This component is responsible for fragmenting larger packets into smaller
  fragments and reassembling them at the receiving end. It is optional in
@@ -832,7 +807,7 @@ This component is responsible for fragmenting larger packets into smaller
  exceed the maximum transmission unit (MTU) of the underlying network.
 
 
-### SCHC Session
+## SCHC Session
 
 As illustrated in the figure below, the `Session` is a communication session
   between two or more `Instances` that share a common `Context`, i.e. they are
@@ -858,7 +833,7 @@ As illustrated in the figure below, the `Session` is a communication session
 
 
 
-### SCHC Domain & Domain Manager
+## SCHC Domain & Domain Manager
 
 The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC
   Contexts of all `Instances` that belong to it. The `Domain Manager` is the
@@ -909,7 +884,7 @@ e | | n                  +--| Endpoints   |--+                 | | e
 ~~~~~~~~
 
 
-### Dispatcher {#sec-dispatcher}
+## Dispatcher {#sec-dispatcher}
 
 The Dispatcher is responsible for delivering compressed packets to the
  correct SCHC `Instance`. It ensures that the compressed packets are sent
@@ -978,7 +953,7 @@ There are two types of admission criteria that are used by the Dispatcher:
 
 
 
-### Context Management {#sec-context-management}
+## Context Management {#sec-context-management}
 
 Context management is responsible for maintaining the shared state between
   SCHC entities. This includes:
@@ -987,13 +962,13 @@ Context management is responsible for maintaining the shared state between
 * Rule lifecycle management
 * Profile distribution and updates
 
-### Context Repository {#sec-context-repository}
+## Context Repository {#sec-context-repository}
 
 A Context Repository provides centralized storage and management of SCHC
   contexts and profiles. While not mandatory for minimal deployments, it
   becomes essential for larger deployments requiring centralized management.
 
-### Management Interface {#sec-management-interface}
+## Management Interface {#sec-management-interface}
 
 A Management Interface provides operational control and monitoring
   capabilities for SCHC deployments. This may include:
