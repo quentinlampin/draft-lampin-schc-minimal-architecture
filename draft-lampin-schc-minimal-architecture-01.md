@@ -110,6 +110,16 @@ normative:
     seriesinfo:
       Internet-Draft: draft-toutain-schc-coreconf-management-00
 
+  DRAFT-SCHCLET:
+    title: "SCHClet - Modular Use of the SCHC Framework"
+    author:
+      -
+        name: Alexander Pelov
+    date: 2025-07
+    seriesinfo:
+      Internet-Draft: draft-pelov-schclet-architecture-01
+
+
 informative:
   RFC9363:
 
