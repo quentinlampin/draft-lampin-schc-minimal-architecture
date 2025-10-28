@@ -729,13 +729,13 @@ The following figure illustrates the main components of an `Endpoint` and their
          |         +------------+             |               |
          |            | manages               v               v
          |            | lifecycle       +------------+  +------------+
-         |            | of Instances    | Profile P1 |  | Context Pk |
-         |            |                 +------------+  +------------+
-         |            |                 configures |       |configures
-         |            |                            |       |
-         |            |   compresses, decompresses +-----+ |
-         |            |     +------------------------+   | |
-         v            v     | fragments, reassembles |   | |
+         |            | of Instances +--| Profile P1 |  | Context Pk |
+         |            |              |  +------------+  +------------+
+         |            | +------------+  configures |       |configures
+         |            | |                          |       |
+         |            | | compresses, decompresses +-----+ |
+         |            | |   +------------------------+   | |
+         v            v v   | fragments, reassembles |   | |
 +------------+  +-------------+                      |   | |
 | Context C1 |--| Instance I1 |<--+                  v   v v
 +------------+  +-------------+   |           +---------------+
