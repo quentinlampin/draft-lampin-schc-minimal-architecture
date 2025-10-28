@@ -712,7 +712,14 @@ and key functionalities and interfaces.
 An `Endpoint` is a network host capable of compressing and decompressing headers
   and optionally fragmenting and reassembling packets. It implements the SCHC
   protocol as defined in {{RFC8724}}. An `Endpoint` can host multiple
-  `Instances`, each with its own `Context` and `Profile`.
+  `Instances`, each with its own `Context` and `Profile`. The `Endpoint Manager`
+  is responsible for managing the lifecycle and configuration of these
+  `Instances`. Packets are routed to the appropriate `Instance` based on defined
+  admission rules by the `Dispatcher`. The `Dispatcher` is a single point of  
+  decision for packet forwarding within the `Endpoint`. 
+
+The following figure illustrates the main components of an `Endpoint` and their
+  interactions:
 
 ~~~~~~~~
         retrieves,
@@ -725,14 +732,17 @@ An `Endpoint` is a network host capable of compressing and decompressing headers
          |            | of Instances    | Profile P1 |  | Context Pk |
          |            |                 +------------+  +------------+
          |            |                 configures |       |configures
-         |            |                            |       |
-         |            |   compresses, decompresses +-----+ |
-         |            |     +------------------------+   | |
-         v            v     | fragments, reassembles |   | |
-+------------+  +-------------+                      |   | |
+         |            |                     |      |       |      | 
+         |            |                     v      |       |      | 
+         |            |                   to I1    |       |      |
+         |            |                            |       |      | 
+         |            |   compresses, decompresses +-----+ |      |
+         |            |     +------------------------+   | |      v
+         v            v     | fragments, reassembles |   | |    to Ik
++------------+  +-------------+                      |   | | 
 | Context C1 |--| Instance I1 |<--+                  v   v v
 +------------+  +-------------+   |           +---------------+
-    ...                 ...       +<----------|  Dispatcher   |----+
+    ...                 ...       +<--------->|  Dispatcher   |----+
     ...                 ...       |     |     +---------------+    |
 +------------+  +-------------+   |  dispatch   ^  |               |
 | Context Ck |--| Instance Ik |<--+  packets  - | reinject  configures
@@ -843,13 +853,13 @@ The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC
 ~~~~~~~~
 
                            Domain Manager
-                   +----------------------------+
-                   |                            |
-                   | +----------+  +----------+ |
-                   | | Endpoint |  |  Context | |
-           +-------+>|  Manager |  |  Manager | |
-           |       | +----------+  +----------+ |
-           |       +--------------------+-------+
+                   +-----------------------------------------+
+                   |                                         |
+                   | +----------+  +----------+ +----------+ |
+                   | | Endpoint |  |  Context | |  Profile | |
+           +-------+>|  Manager |  |  Manager | |  Manager | |
+           |       | +----------+  +----------+ +----------+ |
+           |       +--------------------+--------------------+
   Register |                            |
   Endpoint |   +------------------------+
            |   |  synchronize Context(es)
@@ -887,19 +897,19 @@ e | | n                  +--| Endpoints   |--+                 | | e
 ## Dispatcher {#sec-dispatcher}
 
 The Dispatcher is responsible for delivering compressed packets to the
- correct SCHC `Instance`. It ensures that the compressed packets are sent
- to the appropriate destination and that the decompressed packets are
- delivered to the correct application or protocol routine.
+ correct SCHC `Instance`. It ensures that the compressed packets are sent to the
+ appropriate destination and that the decompressed packets are delivered to the 
+ correct application or protocol routine.
 
 The Dispatcher is a key component that enables the coexistence of multiple
  SCHC `Instances` on the same network host, allowing different protocols or
  applications to use SCHC compression and decompression mechanisms. It also
  allows regular traffic to coexist with SCHC-compressed traffic.
 
-Dispatcher is illustrated in the figure below, where two SCHC `Instances`
-  are running on the same `Endpoint`. The Dispatcher is responsible for routing
-  packets to the appropriate `Instance` based on admission criteria defined in
-  the `Profiles` and the `Contexts`.
+Dispatcher is illustrated in the figure below, where two SCHC `Instances`are
+running on the same `Endpoint`. The Dispatcher is responsible for routing
+ packets to the appropriate `Instance` based on admission criteria defined in
+the `Profiles` and the `Contexts`.
 
 
 ~~~~~~~~
@@ -947,6 +957,8 @@ There are two types of admission criteria that are used by the Dispatcher:
    header fields or values in the packet headers. The `Dispatcher` uses these
    criteria to determine whether a packet should be compressed or fragmented by
    a given `Instance`.
+
+   
 
 **TODO: LINK between discriminator, MO/TV and filter chains.**
 **What follows is WIP, needs to be completed.**
