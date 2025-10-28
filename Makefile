@@ -9,7 +9,7 @@ HTML_FILE = $(DRAFT_NAME).html
 PDF_FILE = $(DRAFT_NAME).pdf
 
 # Default target
-all: txt html xml
+all: txt html xml pdf
 
 # Generate all formats
 complete: txt html xml pdf

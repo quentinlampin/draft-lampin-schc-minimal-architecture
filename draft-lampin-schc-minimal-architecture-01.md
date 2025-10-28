@@ -732,14 +732,11 @@ The following figure illustrates the main components of an `Endpoint` and their
          |            | of Instances    | Profile P1 |  | Context Pk |
          |            |                 +------------+  +------------+
          |            |                 configures |       |configures
-         |            |                     |      |       |      | 
-         |            |                     v      |       |      | 
-         |            |                   to I1    |       |      |
-         |            |                            |       |      | 
-         |            |   compresses, decompresses +-----+ |      |
-         |            |     +------------------------+   | |      v
-         v            v     | fragments, reassembles |   | |    to Ik
-+------------+  +-------------+                      |   | | 
+         |            |                            |       |
+         |            |   compresses, decompresses +-----+ |
+         |            |     +------------------------+   | |
+         v            v     | fragments, reassembles |   | |
++------------+  +-------------+                      |   | |
 | Context C1 |--| Instance I1 |<--+                  v   v v
 +------------+  +-------------+   |           +---------------+
     ...                 ...       +<--------->|  Dispatcher   |----+
