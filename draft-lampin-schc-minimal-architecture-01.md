@@ -69,6 +69,7 @@ normative:
 
   RFC2119:
   RFC8174:
+  RFC9363:
 
   DRAFT-CORECONF:
     title: " CORECONF Rule management for SCHC"
@@ -96,7 +97,7 @@ normative:
 
 
 informative:
-  RFC9363:
+  
 
 entity:
         SELF: "[RFCXXXX]"
