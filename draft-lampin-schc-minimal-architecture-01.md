@@ -144,6 +144,31 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
   document are to be interpreted as described in BCP 14 {{RFC2119}} {{RFC8174}}
   when, and only when, they appear in all capitals, as shown here.
 
+# Methodology
+
+To identify the minimal architecture components required for SCHC operation, this
+  document considers a series of deployment scenarios of increasing complexity.
+  Each scenario introduces new requirements and challenges that need to be
+  addressed by the architecture. By analyzing these scenarios, we aim to
+  identify the essential components and their relationships that are necessary
+  for SCHC to function effectively.
+
+A particular care is taken to ensure that the minimal architecture remains
+  compatible with existing RFCs and maintains consistency in its terminology and
+  functional description.
+
+To this end, the document considers the LPWAN deployment scenarios as a starting
+  point, as they represent the original use case for SCHC. Further scenarios
+  are then considered, which gradually introduce the new requirements and
+  challenges that are relevant to SCHC operation in more complex environments.
+
+Each scenario is analyzed in detail, and the components required to address the
+  challenges introduced by that scenario are identified. The relationships
+  between these components are also described, highlighting how they interact
+  to provide the necessary functionality for SCHC operation. The terminology is
+  discussed to ensure clarity and consistency throughout the document and with
+  existing RFCs.
+
 # Terminology
 
 This section defines terminology and abbreviations used in this
