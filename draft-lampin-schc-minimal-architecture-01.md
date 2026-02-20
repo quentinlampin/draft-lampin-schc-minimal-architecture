@@ -70,6 +70,7 @@ normative:
   RFC2119:
   RFC8174:
   RFC9363:
+  RFC9441:
 
   DRAFT-CORECONF:
     title: " CORECONF Rule management for SCHC"
@@ -171,8 +172,8 @@ Each scenario is analyzed in detail, and the components required to address the
 
 # Terminology
 
-This section defines terminology and abbreviations used in this
-  document. It borrows from the terminology of {{RFC8724}} and {{DRAFT-ARCH}}.
+This section defines terminology and abbreviations used in this document. It
+  borrows from the terminology of {{RFC8724}} and {{DRAFT-ARCH}}.
 
 In the following, terms used in the terminology are assumed to be defined in the
   context of the SCHC protocol unless specified otherwise, *.e.g* Endpoint
@@ -181,39 +182,51 @@ In the following, terms used in the terminology are assumed to be defined in the
 **Endpoint**: A network host capable of compressing and decompressing headers
   and optionally fragmenting and reassembling packets.
 
-**Instance**: A logical component of an Endpoint that implements the SCHC
+**Instance**: A logical component of an `Endpoint` that implements the SCHC
   protocol, including header compression and optionally fragmentation, and
   context management.
 
 **Context**: A set of rules and parameters that define how SCHC operations are
-  performed by `Instances` that implement this `Context`. It includes the Set of
-  Rules (SoR) and the parser ID.
+  performed by `Instances` that implement this `Context`. It includes the
+  `Set of Rules`, the `Context ID`, the `Context Version`, the 
+  `Direction Indicator` and the `parser ID`.
+
+   - **Context ID**: A unique identifier for a `Context` within a `Domain`.
+   - **Context Version**: A version identifier for a `Context`, used to manage
+     updates and changes to the `Context` over time.
+   - **Parser ID**: An identifier that specifies the parser used to delineate
+     header fields in packets processed by the `Instance`.
+   - **Set of Rules (SoR)**: A collection of Rule entries that define how
+     specific header fields are compressed and fragmented by an `Instance`.
+   - **Direction Indicator**: A parameter that indicates on which end an
+     `Instance` is operating (uplink or downlink) for the Set of Rules of the
+     `Context`.
+
+**Profile**: A set of configurations that define how SCHC operations are
+  performed within a specific `Instance`. It includes parameters for the
+  different SCHC components that support the execution of the `Instance`.
 
 **Endpoint Manager**: A logical component that manages the lifecycle and
   configuration of `Instances` within an `Endpoint`. It is responsible for
   creating, updating, and deleting `Instances` as needed, synchronizing
   `Contexts` and `Profiles`, and managing the `Dispatcher`.
 
-**Session**: A communication session between two `Instances` that
+**Session**: A communication session between two `Instances` or more that
   share a common context for compression and fragmentation operations. Whenever
   the `Context` is updated, a new or updated `Session` is established.
 
 **Domain**: A logical grouping of `Instances` that share a common set of
-`Contexts` for compression and fragmentation operations.
-
-**Dispatcher**: A logical component that routes packets to the appropriate
-  `Instances` based on defined admission rules. It can be integrated into the
-  network stack or implemented as a separate component.
-
-**Profile**: A set of configurations that define how SCHC operations are
-  performed within a specific `Instance`. It includes parameters for the
-  different SCHC components.
+  `Contexts` for compression and fragmentation operations.
 
 **Domain Manager**: A logical component that manages the `Domain`, including
   context synchronization and profile distribution.
 
 **Context Repository**: A logical component that stores and manages the
   `Contexts` used by its `Domain`.
+
+**Dispatcher**: A logical component of the `Endpoint` that routes packets to the
+  appropriate `Instances` based on defined admission rules. It can be integrated
+  into the network stack or implemented as a separate component.
 
 
 # Minimal Architecture Components, a case study & discussions
@@ -223,13 +236,19 @@ In this section, we investigate the minimal components required for SCHC
 
 ## The simplest deployment scenario
 
-This section considers a simple point-to-point deployment scenario
-  where two `Endpoints` communicate with each other using SCHC. The devices are
-  assumed to have a very simple network stack, as shown in the figure below:
+This section considers a simplified deployment scenario where an IoT device
+  communicates with a gateway or server using SCHC for header compression and
+  decompression. In this scenario, we assume that both the device and the
+  gateway feature a single application and all traffic is sent and received
+  using the CoAP protocol over UDP over IPv6. SCHC is used to compress the CoAP,
+  UDP, and IPv6 headers before sending the datagrams over the LPWAN link layer.
+  SCHC is used as an adaptation layer between the IPv6 layer and the LPWAN link
+  layer to compress the headers of the datagrams such that they fit within the
+  constraints of the LPWAN link layer.
+
 
 ~~~~~~~~
-
-                Endpoint A                 Endpoint B
+             Host A, IoT Device       Host B, Gateway/Server
             +------------------+       +------------------+
             |  Application A   |       |  Application B   |
             +------------------+       +------------------+
@@ -239,7 +258,7 @@ This section considers a simple point-to-point deployment scenario
             +------------------+       +------------------+
             |       IPv6       |       |       IPv6       |
             +------------------+       +------------------+
-            |  SCHC Instance   |       |  SCHC Instance   |
+            |       SCHC       |       |       SCHC       |
             +------------------+       +------------------+
             | LPWAN Link Layer |       | LPWAN Link Layer |
             +------------------+       +------------------+
@@ -249,8 +268,74 @@ This section considers a simple point-to-point deployment scenario
                     +---------------------------+
 ~~~~~~~~
 
-In this scenario,
+Albeit simplistic, this scenario captures the essential components and
+  interactions required for SCHC operation in a typical LPWAN deployment.
+  We can already identify key components of the SCHC architecture and a first
+  set of requirements that need to be addressed.
 
+Before discussing those requirements, we first need to discuss the terminology
+  and align it with existing RFCs and the requirements of the SCHC working
+  group.
+
+### Terminology discussion
+
+While IoT Devices and Gateways/Servers are commonly used in the LPWAN
+  terminology, we need here to adopt a term that encompasses both entities and
+  extends to other deployment scenarios where network hosts are neither an IoT
+  device nor a Gateway/Server. Reviewing the terminology used in existing RFCs
+  and drafts on SCHC, most notably {{RFC8724}} and {{DRAFT-ARCH}}, we propose to
+  use the term `Endpoint` to refer to network hosts that implement SCHC.
+
+Additionally, we need a name for SCHC protocol routines that are running on
+  each `Endpoint`. We propose to adopt the term `Instance` to refer to the SCHC
+  protocol routine that is running on each `Endpoint`. This choice is aligned
+  with the terminology used in existing RFCs published by the LPWAN working
+  group. For example,
+  
+  in {{RFC9363}}:
+  
+  ```
+  This document formalizes the description of the Rules for
+  better interoperability between SCHC instances either to
+  exchange a set of Rules or to modify the parameters of some
+  Rules.
+  ```
+
+  in {{RFC8824}}:
+  
+  ```
+  CoAP is an application protocol, so CoAP compression requires
+  installing common Rules between the two SCHC instances.
+  ```
+
+  and in {{RFC9441}}: 
+
+  ```
+  Therefore, a device must be allowed to modify only its own
+  Rules on the remote SCHC instance.
+  ```
+
+This is different from the SCHC Instance defined in {{DRAFT-ARCH}}, which means
+  a session:
+  ```
+  SCHC Instance. The **session** between SCHC end points in two or more peer
+    nodes operating SCHC to communicate using a common SoR and a matching SoV.
+    There are 2 SCHC Instances or more involved per SCHC stratum, one for the
+    SCHC Stratum Header and one or more for the SCHC payload, i.e., the
+    SCHC-compressed data.
+  ```
+
+For clarity and coherence with existing terminology, we propose that the term
+  `Session` be used to refer to the communication session between two (or more)
+  SCHC `Instances`.
+
+### Functional requirements
+
+This scenario is a simplified representation of a typical LPWAN deployment where
+  an IoT device communicates with a gateway or server using SCHC for header
+  compression and decompression.
+
+In this scenario,
 
 - Both `Endpoint` A and `Endpoint` B implement the SCHC protocol for header
   compression and decompression.
@@ -264,83 +349,23 @@ In this scenario,
   meaning that it is not dynamically loaded or unloaded.
 - All of the traffic is compressed and decompressed using those `Instances`.
 
-In this simplistic scenario, which is representative of some LPWAN deployments,
- the requirements for the minimal architecture are as follows:
+In this scenario, the `Instances` on both `Endpoints` rely on a `Session` to
+  communicate using SCHC for header compression and decompression. For the
+  `Session` to be successful, both `Instances` must agree on the compression
+  rules in use. More specifically, when the `Instance` on `Endpoint` A
+  compresses a datagram, the rule used for compression **MUST** be known to the
+  `Instance` on `Endpoint` B, that is, the Set of Rules (SoR) of `Endpoint` A
+  and `Endpoint` B **MUST** both contain said rule with the same Rule ID. This
+  requires that both `Instances` have compatible SoRs, meaning that the Rule IDs
+  and Rule Descriptors are consistent between the two `Instances`. Parsers of
+  both `Instances` MUST be compatible, meaning that they MUST delineate the same
+  header fields in the same order.
 
-- The Set Of Rules (SoR) of `Endpoint` A MUST be compatible with the SoR of
-  `Endpoint` B. Such compatibility requires that rules IDs and Rule
-  Descriptors are consistent between the two `Instances`. Parsers of both
-  `Instances` MUST be compatible, meaning that they MUST delineate the same
-  header fields in the same order and with the same semantics.
-- Whenever `Endpoint` A compresses a packet, it MUST use the same `Context` as
-  `Endpoint` B. This means that the `Context` MUST be synchronized between the
-  two `Instances`. This communication session is referred to as a `Session`.
-
-
-
-**Why `Instance`?** Here we use the term `Instance` to refer to the SCHC
- protocol routine that is running on each endpoint. This is different from the
- SCHC Instance defined in {{DRAFT-ARCH}}, which refers to a pair of SCHC
- endpoints that communicate through SCHC.
-
-The rationale for this terminology is that the term `Instance` is often used to
-  refer to a specific realization of a class in object-oriented programming, and
-  in this case, the SCHC `Instance` is a specific realization of the SCHC
-  protocol that is running on each endpoint.
-
-**Session vs Instance**: In this document, we use the term `Session` to refer to
-  a communication session between two (or more) `Instances` that are
-  communicating with each other using SCHC, using the same `Context`.
-
-The rationale for this is that the term `Session` is often used to refer to a
-  specific communication session between two endpoints and this definition
-  extends this concept to all `Instances` that maintain a common context.
-
-**Why not use the terminology of {{DRAFT-ARCH}}?** We believe that
-  version -04 introduced changes in the terminology that are prone to confusion.
-  In particular, the term `Instance` is defined as:
-
-  ```
-  SCHC Instance.  The **session** between SCHC end points in two or more
-      peer nodes operating SCHC to communicate using a common SoR and a
-      matching SoV.  There are 2 SCHC Instances or more involved per
-      SCHC stratum, one for the SCHC Stratum Header and one or more for
-      the SCHC payload, i.e., the SCHC-compressed data.
-  ```
+  Additionnaly, both `Instances` must also agree on their respective roles with
+  regard to the `Direction Indicator` (DI) used in the Rule Entries.
 
 
-  while the end point is defined as:
 
-  ```
-  SCHC end point.  An entity (e.g., Device, Application and Network
-      Gateway) involved in the SCHC process.  Each SCHC end point will
-      have its Set of Rules (SoR), based on the profile, the protocols,
-      the device, the behaviour and a Set of Variables (SoV).
-  ```
-
-  Those definitions are confusing as they do not clearly identify the components
-  which they are referring to. For example, the term `Instance` can be used to
-  refer to session between two applications that are using SCHC, or to refer to
-  two hardware devices that are using SCHC, etc.
-
-The proposed terminology in this document aims to clarify the definitions of the
-  architecture components by calling a session a `Session` and therefore reuses
-  the term `Instance` to refer to the SCHC protocol routine that is running on
-  an endpoint.
-
-This terminology is consistent with prior versions of the architecture document,
-  such as version -03, which had the following definitions:
-
-* SCHC Instance.  The different stages of SCHC in a host.  Each
-  instance will have its Set of Rules (SoR), based on the profile,
-  the protocols, the device, the behaviour and a Set of Variables
-  (SoV).  There are 2 SCHC Instances involved per SCHC stratum, one
-  for the SCHC header and one for the SCHC payload, i.e., the SCHC-
-  compressed data.
-
-*  SCHC Session.  The association of SCHC Instances in two or more
-  peer nodes operating SCHC to communicate using a common SoR and a
-  matching SoV.
 
 ## The three endpoints deployment scenario
 
@@ -348,7 +373,6 @@ In this section, we consider a more complex deployment scenario where two or
   more endpoints communicate with the same SCHC Instance/Endpoint. This scenario
   is common in IoT deployments where multiple sensors or devices communicate
   with a central gateway or server using SCHC.
-
 
 ~~~~~~~~
 
@@ -380,7 +404,7 @@ In this scenario, we have three `Endpoints`, `Endpoint` A, `Endpoint` B,
 
 We further assume that `Endpoints` A and C have very similar traffic patterns,
   meaning that they send similar packets to Endpoint B. This allows the SCHC
-  `Instances` on Host A, B and C to share the same `Context`, which reduces
+  `Instances` on Hosts A, B and C to share the same `Context`, which reduces
   the complexity of administration and management of this deployment.
   In the following, we refer to `Instances` that share the same `Contexts` as a
   `Domain`.
@@ -399,7 +423,6 @@ In this typical IoT deployment scenario, the requirements for the minimal
   `Contexts` and synchronization. This role is assumed by a logical component of
   the `Domain`, referred to as the `Domain Manager`.
 
-
 **Why synchronize the `Contexts` of A and C?** Synchronizing the `Contexts` of
   Endpoint A and Endpoint C is desirable. This reduces the complexity of
   managing multiple `Contexts` at Endpoint B and eventually reduces the size the
@@ -414,14 +437,15 @@ In this typical IoT deployment scenario, the requirements for the minimal
   `Instance`, we allow for a more flexible and modular architecture that can be
   adapted to different deployment scenarios.
 
-**Context compatibility or equality?** While not strictly required, it is
-  desirable that the `Contexts` of all `Instances` that belong to the same
-  `Domain` are equal, meaning that they share the same SoR, parsers, and rule
-  IDs. This simplifies the management of the `Contexts` and reduces the risk of
-  misconfiguration or incompatibility between `Instances`. However, this is not
-  strictly required, as long as the `Contexts` are compatible, meaning that they
-  can be used interchangeably without causing issues in compression or
-  fragmentation operations.
+**SoR compatibility or equality?** In this scenario, we require that the SoRs of
+  all `Instances` involved in a Domain be compatible. However, the SoRs do not
+  need to be identical, meaning that Host A and Host C can have rules that are
+  only shared with But not with each other. Such rules are desirable to support
+  the compression of host-specific traffic characteristics, such as addresses or
+  port numbers. Obviously, those host-specific rules MUST feature different Rule
+  IDs to avoid conflicts. This requirement promotes flexibility and scalability
+  in the management of `Contexts` in larger deployments.
+
 
 ## The dynamic traffic scenario
 
@@ -470,11 +494,11 @@ Then comes the spring, and the temperature and thermostat setpoints change.
 +--------------------+
 | Application Server |
 +--------------------+
-  |
-  | 1. Submission of a new Context (v2)
-  |
-  |       +----------------+  Context v2   +--------------------+
-  +------>| Domain Manager | <---------->  | Context Repository |
+     |
+     | 1. Submission of a new Context (v2)
+     |
+     |    +----------------+  Context v2   +--------------------+
+     +--->| Domain Manager | <---------->  | Context Repository |
           +----------------+    stored     +--------------------+
                    |
                    |
@@ -522,6 +546,21 @@ Answering those specific questions is critical for the proper operation of SCHC
   `Endpoints` are aware of the latest `Context` version and can adapt their
   behavior accordingly.
 
+Additionally, aside from architectural considerations, this scenario highlights
+  the need for a `Context` model distinct from the Set of Rules (SoR), defining
+  the content and structure of a `Context`. Currently, the SCHC data model
+  ({{RFC9363}}) provides no description for `Contexts` while {{RFC8724}}
+  describes the `Context` as a set of rules.
+
+At a minimum, the `Context` model MUST include:
+- a `Context` Unique Identifier within the Domain.
+- a version identifier.
+- The Set of Rules (SoR).
+- The parser ID.
+
+
+
+
 ## Multiple SCHC Instances in the same Endpoint
 
 In this scenario, a single `Endpoint` that hosts multiple `Instances` is
@@ -556,11 +595,11 @@ In this scenario, a single `Endpoint` that hosts multiple `Instances` is
 ~~~~~~~~
 
 In the above example, two `Endpoints`, A and B, each host two `Instances`.
- `Endpoint` A hosts `Instance` A1 and `Instance` A2, while `Endpoint` B hosts
- `Instance` B1 and `Instance` B2. `Instance` A1 and `Instance` B1 are configured
-  to handle CoAP traffic and share a common `Context` C1 while `Instance` A2 and
-  `Instance` B2 are configured to handle HTTP traffic and share a common
-  `Context` C2.
+  `Endpoint` A hosts `Instance` A1 and `Instance` A2, while `Endpoint` B hosts
+  `Instance` B1 and `Instance` B2. `Instance` A1 and `Instance` B1 are 
+  configured to handle CoAP traffic and share a common `Context` C1 while 
+  `Instance` A2 and `Instance` B2 are configured to handle HTTP traffic and 
+  share a common `Context` C2.
 
 This new scenario introduces the following challenges:
 
@@ -738,14 +777,16 @@ and key functionalities and interfaces.
 An `Endpoint` is a network host capable of compressing and decompressing headers
   and optionally fragmenting and reassembling packets. It implements the SCHC
   protocol as defined in {{RFC8724}}. An `Endpoint` can host multiple
-  `Instances`, each with its own `Context` and `Profile`. The `Endpoint Manager`
-  is responsible for managing the lifecycle and configuration of these
-  `Instances`. Packets are routed to the appropriate `Instance` based on defined
-  admission rules by the `Dispatcher`. The `Dispatcher` is a single point of  
-  decision for packet forwarding within the `Endpoint`. 
+  `Instances`, each with its own `Context` and `Profile`.
 
-The following figure illustrates the main components of an `Endpoint` and their
-  interactions:
+When a `Endpoint` is supporting multiple `Instances`, the `Endpoint Manager` is 
+  responsible for managing the lifecycle and configuration of these `Instances`. 
+  Packets are routed to the appropriate `Instance` based on defined admission 
+  rules by the `Dispatcher`. The `Dispatcher` is a single point of decision for 
+  packet forwarding within the `Endpoint`.
+
+The following figure illustrates the main components of an `Endpoint` supporting
+multiple `Instances` and their interactions:
 
 ~~~~~~~~
         retrieves,
@@ -777,39 +818,48 @@ The following figure illustrates the main components of an `Endpoint` and their
                                     +-------------------------------+
 ~~~~~~~~
 
+In its simplest form, an `Endpoint` MAY implement a single `Instance` with a
+  hardwired configuration, as described in {{DRAFT-SCHCLET}}. In this case, the
+  `Endpoint Manager` and `Dispatcher` components are not required.
+
 
 ## Instance
 
-An `Instance` is the fundamental component that implements the SCHC protocol
-  as defined in {{RFC8724}}. An `Endpoint` MAY execute several `Instances` in
-  its protocol stack. Each `Instance` operates independently, with its own
-  context and profile.
+An `Instance` is the fundamental component that implements a subset of the SCHC
+  protocol as defined in {{RFC8724}}. An `Endpoint` MAY execute several 
+  `Instances` in its protocol stack. Each `Instance` operates independently, 
+  with its own context and profile.
 
-An `Instance` MUST implement the following components:
+An `Instance` implements a subset of SCHC functionalities, which at a minimum
+  includes one of the following components:
 
-* Header Compression and Decompression (C/D) engine
-* Context Manager
-* Profile Manager
+* Header Compression and Decompression (C/D)
+* Fragmentation and Reassembly (F/R)
+* Acknowledgments
 
-Its configuration MUST include:
+The `Instance` feature set is defined in its Profile, which at minimum includes
+  a manifest of the SCHC features that are implemented.
 
+Its configuration there MUST include:
+
+* a SCHC Profile, which features at minimum a manifest of the SCHC features
+  that are implemented.
 * a SCHC Context, which defines the set of C/D and F/R rules - or Set of Rules -
- and the parser to be used to delineate the header field.
+  and the parser to be used to delineate the header field.
 * a SCHC Profile, which defines the configuration of the Dispatch Engine, the
- rule matching policy, and the device-specific configuration.
+  rule matching policy, and the device-specific configuration.
 
 
 A SCHC Instance MAY implement:
 
-* Fragmentation and Reassembly (F/R) functionality.
 * Dynamic context update mechanisms.
 * Performance monitoring and reporting.
 
 ### Header Compression and Decompression (C/D) engine
 
 This component is responsible for compressing and decompressing headers
- using the SCHC protocol, as described in {{RFC8724}}. It applies the rules
- defined in the SCHC Context.
+  using the SCHC protocol, as described in {{RFC8724}}. It applies the rules
+  defined in the SCHC Context.
 
 The C/D engine MUST expose the following interface:
 
@@ -822,7 +872,7 @@ Internally, on compression, the C/D engine:
 
 - delineates the fields using the parser identified in the SCHC Context.
 - chooses the appropriate compression rule based on the SCHC Context and the
- matching policy defined in the profile.
+  matching policy defined in the profile.
 - applies the compression rule to the fields of the header.
 - generates the compressed SCHC packet.
 
@@ -835,9 +885,15 @@ On decompression, the C/D engine:
 ### Fragmentation and Reassembly (F/R)
 
 This component is responsible for fragmenting larger packets into smaller
- fragments and reassembling them at the receiving end. It is optional in
- the minimal architecture but recommended for scenarios where packet sizes
- exceed the maximum transmission unit (MTU) of the underlying network.
+  fragments and reassembling them at the receiving end. It is optional in
+  the minimal architecture but recommended for scenarios where packet sizes
+  exceed the maximum transmission unit (MTU) of the underlying network.
+
+### SCHClet considerations
+
+In {{DRAFT-SCHCLET}}, the authors introduce the concept of SCHClets, which are
+  modular components that implement a subset of SCHC functionalities, such as 
+  specific compression or fragmentation algorithms, as a self-contained unit.
 
 
 ## SCHC Session
@@ -877,7 +933,6 @@ The SCHC `Domain` is an administrative unit, whose role is to manage the SCHC
 
                            Domain Manager
                    +-----------------------------------------+
-                   |                                         |
                    | +----------+  +----------+ +----------+ |
                    | | Endpoint |  |  Context | |  Profile | |
            +-------+>|  Manager |  |  Manager | |  Manager | |
@@ -919,20 +974,20 @@ e | | n                  +--| Endpoints   |--+                 | | e
 
 ## Dispatcher {#sec-dispatcher}
 
-The Dispatcher is responsible for delivering compressed packets to the
- correct SCHC `Instance`. It ensures that the compressed packets are sent to the
- appropriate destination and that the decompressed packets are delivered to the 
- correct application or protocol routine.
+The Dispatcher is responsible for delivering compressed packets to the correct 
+  SCHC `Instance`. It ensures that the compressed packets are sent to the
+  appropriate destination and that the decompressed packets are delivered to the 
+  correct application or protocol routine.
 
-The Dispatcher is a key component that enables the coexistence of multiple
- SCHC `Instances` on the same network host, allowing different protocols or
- applications to use SCHC compression and decompression mechanisms. It also
- allows regular traffic to coexist with SCHC-compressed traffic.
+The Dispatcher is a key component that enables the coexistence of multiple SCHC
+  `Instances` on the same network host, allowing different protocols or
+  applications to use SCHC compression and decompression mechanisms. It also
+  allows regular traffic to coexist with SCHC-compressed traffic.
 
 Dispatcher is illustrated in the figure below, where two SCHC `Instances`are
-running on the same `Endpoint`. The Dispatcher is responsible for routing
- packets to the appropriate `Instance` based on admission criteria defined in
-the `Profiles` and the `Contexts`.
+  running on the same `Endpoint`. The Dispatcher is responsible for routing
+  packets to the appropriate `Instance` based on admission criteria defined in
+  the `Profiles` and the `Contexts`.
 
 
 ~~~~~~~~
@@ -1145,7 +1200,8 @@ e | | n                  +--| Endpoints   |--+                 | | e
 
 **Dispatch scenarios**:
 
-Case 1: The Dispatch Engine is integrated into the network stack and a single SCHC Instance is used.
+Case 1: The Dispatch Engine is integrated into the network stack and a single 
+SCHC Instance is used.
 
 ~~~~~~
           Endpoint 1                          Endpoint 2
@@ -1297,10 +1353,155 @@ When receiving packets, the Dispatch Engine checks the SCHC ethertype and MPLS
 
 
 
---- back
+## Parsing and Field Grouping Impact on Residue Size
 
-# Change Log
+When defining Compression/Decompression (C/D) rules in SCHC, the way fields are
+  parsed and grouped must be homogeneous across all `Instances` that share the 
+  same `Context`. This section illustrates how different parsing and grouping
+  strategies breaks compatibility between `Instances` due to differences in
+  residue size calculation.
 
+~~~~~~~~
+   Traffic Class
+ 0 1 2 3 4 5 6 7 8 
++-+-+-+-+-+-+-+-+-+
+|      DS     |ECN|
++-+-+-+-+-+-+-+-+-+
+~~~~~~~~
+
+Suppose that the DS subfield assume the 5 following binary values: 
+
+~~~~~~~~
+      DS
+    ------
+    001010
+    001100
+    001110 
+    010010
+    010110
+~~~~~~~~
+
+Suppose that the ECN subfield assume the 3 following binary values:
+
+~~~~~~~~
+    ECN
+    ---
+    01
+    10
+    11
+~~~~~~~~
+
+Let's further assume that all combinations of DS and ECN values are valid.
+The cartesian product of the two fields will produce the following set of 15 values:
+
+~~~~~~~~
+    001010 01
+      ''   10
+      ''   11
+    001100 01
+      ''   10
+      ''   11
+    001110 01
+      ''   10
+      ''   11
+    010010 01
+      ''   10
+      ''   11
+    010110 01
+      ''   10
+      ''   11
+~~~~~~~~
+
+Now suppose that a C/D rule is defined to match on the Traffic Class field as a 
+whole (i.e., both DS and ECN bits) and use a Match-Mapping/Mapping-Sent MO-CDA. 
+The size of the residue for this field would be log2(15) = 4 bits to cover all
+possible combinations of DS and ECN values.
+
+~~~~~~~~
+
++-----------------------+---+-------+--------------+---------------+
+|          FID          |...| MO/CDA| Target Value |  Residue Size |
++-----------------------+---+-------+--------------+---------------+
+| fid-ipv6-version      |...| EQ/NS |     0110     |      0        |
+|-----------------------+---+-------+--------------+---------------+
+| fid-ipv6-trafficclass |...| MM/MS |   001010 01  |      4        |
+|                       |   |       |     ''   10  |               |
+|                       |   |       |     ''   11  |               |
+|                       |   |       |   001100 01  |               |
+|                       |   |       |     ''   10  |               |
+|                       |   |       |     ''   11  |               |
+|                       |   |       |   001110 01  |               |
+|                       |   |       |     ''   10  |               |
+|                       |   |       |     ''   11  |               |
+|                       |   |       |   010010 01  |               |
+|                       |   |       |     ''   10  |               |
+|                       |   |       |     ''   11  |               |
+|                       |   |       |   010110 01  |               |
+|                       |   |       |     ''   10  |               |
+|                       |   |       |     ''   11  |               |
++-----------------------+---+-------+--------------+---------------+
+
+~~~~~~~~
+
+Alternatively, suppose that the "same" C/D rule is defined to match on the 
+Traffic Class DS and ECN fields separately (i.e., two different fields). To 
+cover all possible combinations of DS and ECN values, this C/D rule would 
+require a residue of log2(5) = 3 bits for the DS field plus log2(3) = 2 bits for
+the ECN field, i.e., a total of 5 bits.
+
+~~~~~~~~
+
++---------------------------+---+-------+--------------+---------------+
+|          FID              |...| MO/CDA| Target Value |  Residue Size |
++---------------------------+---+-------+--------------+---------------+
+| fid-ipv6-version          |...| EQ/NS |     0110     |       0       |
+|---------------------------+---+-------+--------------+---------------+
+| fid-ipv6-trafficclass-ds  |...| MM/MS |    001010    |       3       |
+|                           |   |       |    001100    |               |
+|                           |   |       |    001110    |               |
+|                           |   |       |    010010    |               |
+|                           |   |       |    010110    |               |
++---------------------------+---+-------+--------------+---------------+
+| fid-ipv6-trafficclass-ecn |...| MM/MS |        01    |       2       |
+|                           |   |       |        10    |               |
+|                           |   |       |        11    |               |
++---------------------------+---+-------+--------------+---------------+
+                                 
+~~~~~~~~
+
+
+
+
+This size mismatch shows that, when defining C/D rules, the way fields are 
+parsed and grouped matters. In this example, parsing the Traffic Class field as
+a whole results in a smaller residue size than parsing it as two separate fields.
+
+
+## Context Equality vs Compatibility
+
+
+Two SCHC Contexts are considered `equal` if they define identical sets of
+  C/D and F/R rules, with the same Field IDs, Matching Operators, Target Values,
+  and Residue Sizes.
+
+Two SCHC Contexts are considered `compatible` if they define overlapping sets of
+  C/D and F/R rules. This means that they may share some rules, but not 
+  necessarily all of them. 
+
+For example, consider three SCHC Contexts, Context A, Context B, and Context C
+deployed respectively on Endpoint A, Endpoint B, and Endpoint C:
+
+- Context A features 2 rules Rule 1 and Rule 2.
+- Context B features 2 rules Rule 1 and Rule 3.
+- Context C features 3 rules Rule 1, Rule 2, and Rule 3.
+
+In this example:
+- Rule 1 is common to all three Contexts. It is used as a base rule for 
+  compression and decompression. It does not compress device-specific fields 
+  such as device identifiers (.e.g. IP Source Addresses) but only common fields 
+  (e.g. IPv6 Version, Next Header, UDP Destination Port).
+- Rule 2 is specific to Contexts A and C. It compresses device-specific fields
+  relevant to Endpoint A and C (e.g., IP Source Address of Endpoint A).
 ## Changes from -00 to -01
 
 * Initial version
